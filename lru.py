@@ -3,7 +3,7 @@
 # Cache implementaion with a Least Recently Used (LRU) replacement policy and a
 # basic dictionary interface.
 
-# Copyright (C) 2006  Jay Hutchinson
+# Copyright (C) 2006, 2009  Jay Hutchinson
 
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -36,6 +36,8 @@
 class lrucache:
   
   def __init__(self, size):
+      
+    assert size > 0
     
     # Initialize the hash table as empty.
     self.table = {}
@@ -71,6 +73,11 @@ class lrucache:
       self.head.next.prev = node
       self.head.next = node
 
+  def __len__(self):
+    return len(self.table)
+    
+  def clear(self):
+      self.table.clear()
     
   def __contains__(self, key):
     return key in self.table
