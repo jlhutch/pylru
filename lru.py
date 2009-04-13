@@ -186,7 +186,39 @@ class lrucache:
         assert size > 0
         raise NotImplementedError
 	
+    def addTailNode(self):
+        raise NotImplementedError
+	
+	node = _dlnode()
 
+	node.next = self.head
+        node.prev = self.head.prev
+  
+        self.head.prev.next = node
+        self.head.prev = node
+	
+	self.listSize += 1
+
+    def removeTailNode(self):
+        raise NotImplementedError
+
+        assert self.listSize > 1   # Invarient
+	node = self.head.prev
+	if node.key is not None:
+	    del self.table[node.key]
+	
+	# Splice the tail node out of the list
+	self.head.prev = node.prev
+	node.prev.next = self.head
+	
+	self.listSize -= 1
+	
+	node.prev = None
+	node.next = None
+	
+	node.key = None
+	node.obj = None
+	
   
     def __del__(self):
         # When we are finished with the cache, special care is taken to break the
