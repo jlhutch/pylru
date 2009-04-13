@@ -56,7 +56,7 @@ class lrucache:
 
                 self.key = None
                 self.obj = None
-    
+            
     
         # Initalize the list with 'size' empty nodes. Create the first node and
         # assign it to the 'head' variable, which represents the head node in the
@@ -71,12 +71,20 @@ class lrucache:
   
             self.head.next.prev = node
             self.head.next = node
+	    
+	 self.listSize = size
 
     def __len__(self):
         return len(self.table)
     
     def clear(self):
-            self.table.clear()
+        self.table.clear()
+	
+        node = self.head
+	for i in range(self.listSize):
+	    node.key = None
+	    node.obj = None
+	    node = node.next
     
     def __contains__(self, key):
         return key in self.table
@@ -131,7 +139,7 @@ class lrucache:
     
         # If the node already contains something we need to remove the old key from
         # the dictionary.
-        if not node.key == None:
+        if node.key is not None:
             del self.table[node.key]
     
         # Place the key and the object in the node
@@ -167,19 +175,17 @@ class lrucache:
         # even for the case where the 'node' is the 'head' node.
         self.mtf(node)
         self.head = node.next
-    
-        return
+
       
     
-    def size(self, size):
+    def size(self, size=None):
       
         if size is None:
             return self.listSize
       
         assert size > 0
-    
-    
-    
+        raise NotImplementedError
+	
 
   
     def __del__(self):
@@ -191,7 +197,7 @@ class lrucache:
         tail = self.head.prev
     
         node = self.head
-        while node.prev:
+        while node.prev is not None:
             node = node.prev
             node.next.prev = None
       
