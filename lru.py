@@ -31,6 +31,15 @@
 # the hash table under their associated key. The hash table allows efficient
 # lookup of objects by key.
 
+# The doubly linked list is composed of nodes. Each
+# node has a 'prev' and 'next' variable to hold the node that comes before
+# it and after it respectivly. Initially the two variables each point to
+# the node itself, creating a circular doubly linked list of size one. Each
+# node has a 'obj' and 'key' variable, holding the object and the key it is
+# stored under respectivly.
+class _dlnode:
+    def __init__(self):
+	    self.key = None
 
 
 class lrucache:
@@ -40,39 +49,20 @@ class lrucache:
     
         # Initialize the hash table as empty.
         self.table = {}
-    
-        # The doubly linked list is composed of nodes. The nodes for the list are
-        # all pre-built upfront, so the class definition is only needed here. Each
-        # node has a 'prev' and 'next' variable to hold the node that comes before
-        # it and after it respectivly. Initially the two variables each point to
-        # the node itself, creating a circular doubly linked list of size one. Each
-        # node has a 'obj' and 'key' variable, holding the object and the key it is
-        # stored under respectivly.
-        class dlnode:
-            def __init__(self):
 
-                self.next = self
-                self.prev = self
-
-                self.key = None
-                self.obj = None
-            
     
         # Initalize the list with 'size' empty nodes. Create the first node and
         # assign it to the 'head' variable, which represents the head node in the
         # list. Then each iteration of the loop creates a subsequent node and
         # inserts it directly after the head node.
-        self.head = dlnode()
+        self.head = _dlnode()
+        self.head.next = self.head
+        self.head.prev = self.head
+	
+        self.listSize = 1
+
         for i in range(1, size):
-            node = dlnode()
-      
-            node.prev = self.head
-            node.next = self.head.next
-  
-            self.head.next.prev = node
-            self.head.next = node
-	    
-	 self.listSize = size
+            self.addTailNode()
 
     def __len__(self):
         return len(self.table)
@@ -81,10 +71,10 @@ class lrucache:
         self.table.clear()
 	
         node = self.head
-	for i in range(self.listSize):
-	    node.key = None
-	    node.obj = None
-	    node = node.next
+        for i in range(self.listSize):
+            node.key = None
+            node.obj = None
+            node = node.next
     
     def __contains__(self, key):
         return key in self.table
@@ -184,41 +174,46 @@ class lrucache:
             return self.listSize
       
         assert size > 0
-        raise NotImplementedError
+        
+        if size > self.listSize:
+            for i in range(size - self.listSize):
+                self.addTailNode()
+        elif size < self.listSize:
+            for i in range(self.listSize - size):
+                self.removeTailNode()
+                
+        return self.listSize
+            
 	
     def addTailNode(self):
-        raise NotImplementedError
-	
-	node = _dlnode()
-
-	node.next = self.head
+        node = _dlnode()
+        node.next = self.head
         node.prev = self.head.prev
   
         self.head.prev.next = node
         self.head.prev = node
-	
-	self.listSize += 1
+        
+        self.listSize += 1
 
     def removeTailNode(self):
-        raise NotImplementedError
-
+        
         assert self.listSize > 1   # Invarient
-	node = self.head.prev
-	if node.key is not None:
-	    del self.table[node.key]
-	
-	# Splice the tail node out of the list
-	self.head.prev = node.prev
-	node.prev.next = self.head
-	
-	self.listSize -= 1
-	
-	node.prev = None
-	node.next = None
-	
-	node.key = None
-	node.obj = None
-	
+        node = self.head.prev
+        if node.key is not None:
+            del self.table[node.key]
+        
+        # Splice the tail node out of the list
+        self.head.prev = node.prev
+        node.prev.next = self.head
+        
+        self.listSize -= 1
+        
+        node.prev = None
+        node.next = None
+        
+        node.key = None
+        node.obj = None
+        
   
     def __del__(self):
         # When we are finished with the cache, special care is taken to break the
