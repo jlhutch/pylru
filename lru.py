@@ -78,6 +78,7 @@ class lrucache(object):
     
     def __contains__(self, key):
         return key in self.table
+        # XXX Should this move the object to front of list? XXX
     
     
     def __getitem__(self, key):
@@ -248,3 +249,43 @@ class lrucache(object):
 
 
 
+# Wrapper using write-through semantics
+class lruwrap(object):
+    def __init__(self, store, size):
+        self.cache = lrucache(size)
+        self.store = store
+        
+    def __len__(self):
+        return len(self.store)
+        
+    def clear(self):
+        self.cache.clear()
+        self.store.clear()
+
+    def __contains__(self, key):
+        
+        if key in self.cache:
+            return True
+        if key in self.store:
+            return True
+            
+        return False
+    
+    def __getitem__(self, key):
+        try:
+            return self.cache[key]
+        except KeyError:
+            pass
+        
+        return self.store[key] # XXX Re-raise exception?
+        
+    def __setitem__(self, key, value):
+        self.cache[key] = value
+        self.store[key] = value
+        
+    def __delitem__(self, key):
+        try:
+            del self.cache[key]
+        except KeyError:
+            pass
+        del self.store[key]
