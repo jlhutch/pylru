@@ -37,12 +37,12 @@
 # the node itself, creating a circular doubly linked list of size one. Each
 # node has a 'obj' and 'key' variable, holding the object and the key it is
 # stored under respectivly.
-class _dlnode:
+class _dlnode(object):
     def __init__(self):
 	    self.key = None
 
 
-class lrucache:
+class lrucache(object):
   
     def __init__(self, size):
       
