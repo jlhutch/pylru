@@ -289,3 +289,20 @@ class lruwrap(object):
         except KeyError:
             pass
         del self.store[key]
+
+
+class lrudecorator(object):
+    def __init__(self, func, size):
+        self.func = func
+        self.cache = lrucache(size)
+        
+    def __call__(self, *args, **kwargs):
+        try:
+            value = self.cache[(args, kwargs)]
+        except KeyError:
+            pass
+        
+        value = self.func(*args, **kwargs)
+        self.cache[(args, kwargs)] = value
+        return value
+        
