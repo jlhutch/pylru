@@ -67,12 +67,8 @@ class lrucache(object):
     def __len__(self):
         return len(self.table)
     
+    # Does not call callback to write any changes!
     def clear(self):
-        if self.callback:
-            for key in self.table:
-                node = self.table[key]
-                self.callback(node.key, node.obj)
-                
         self.table.clear()
 	
         node = self.head
@@ -80,11 +76,16 @@ class lrucache(object):
             node.key = None
             node.obj = None
             node = node.next
+            
     
     def __contains__(self, key):
         return key in self.table
         # XXX Should this move the object to front of list? XXX
     
+    def peek(self, key):
+        # Look up the node
+        node = self.table[key]
+        return node.obj
     
     def __getitem__(self, key):
     
@@ -258,30 +259,32 @@ class lrucache(object):
 
 
 
-# Wrapper using write-through semantics
 class lruwrap(object):
     def __init__(self, store, size, writethrough=True):
+        self.store = store
         self.writethrough = writethrough
 
         if self.writethrough:
             self.cache = lrucache(size)
         else:
-            self.cache = lrucache(size, self.ejectCallBack)
             self.dirty = set()
-        
-        self.store = store
-        
-        
+            def callback(key, value):
+                if key in self.dirty:
+                    self.store[key] = value
+                    self.dirty.remove(key)
+            self.cache = lrucache(size, callback)
         
     def __len__(self):
-        # XXX We could cache the size
         return len(self.store)
+        
+    def size(self, size=None):
+        self.cache.size(size)
         
     def clear(self):
         self.cache.clear()
-        if self.writethrough:    # XXX Remove this test XXX
-            assert len(self.dirty) == 0
         self.store.clear()
+        if not self.writethrough:
+            self.dirty.clear()
         
     def __contains__(self, key):
         # XXX Should this bring the key/value into the cache?
@@ -317,15 +320,16 @@ class lruwrap(object):
             pass
         del self.store[key]
         
-    def ejectCallback(self, key, value):
-        if key in self.dirty:
-            self.store[key] = value
-            self.dirty.remove(key)
+        
+    def sync(self):
+        if not self.writethrough:
+            for key in self.dirty:
+                value = self.cache.peek(key)  # Doesn't change the cache's order
+                self.store[key] = value
+            self.dirty.clear()
             
     def __del__(self):
-        # Flush the dirty objects
         self.sync()
-        
 
 
 class lrudecorator(object):

@@ -123,6 +123,35 @@ def wraptest():
 
         assert tmp1 == tmp2
         
+def wraptest2():
+    import random
+
+    q = dict()
+    x = lruwrap(q, 32, False)
+    for i in range(256):
+        a = random.randint(0, 256)
+        b = random.randint(0, 256)
+    
+        x[a] = b
+        
+    x.sync()
+    for i in range(512):
+        a = random.randint(0, 256)
+        tmp1 = None
+        tmp2 = None
+        try:
+            tmp1 = x[a]
+        except KeyError:
+            tmp1 = None
+           
+        try:
+            tmp2 = q[a]
+        except KeyError:
+            tmp2 = None
+
+        assert tmp1 == tmp2
+        
+        
 @lrudecorator(14)
 def cube(x):
     return x*x*x
@@ -131,6 +160,7 @@ if __name__ == '__main__':
     import random
     
     wraptest()
+    wraptest2()
     
     for i in range(300):
         x = random.randint(0, 25)
