@@ -127,7 +127,7 @@ def wraptest2():
     import random
 
     q = dict()
-    x = lruwrap(q, 32, False)
+    x = lruwrap(q, 32, True)
     for i in range(256):
         a = random.randint(0, 256)
         b = random.randint(0, 256)

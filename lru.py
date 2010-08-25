@@ -260,11 +260,11 @@ class lrucache(object):
 
 
 class lruwrap(object):
-    def __init__(self, store, size, writethrough=True):
+    def __init__(self, store, size, writeback=False):
         self.store = store
-        self.writethrough = writethrough
+        self.writeback = writeback
 
-        if self.writethrough:
+        if not self.writeback:
             self.cache = lrucache(size)
         else:
             self.dirty = set()
@@ -283,7 +283,7 @@ class lruwrap(object):
     def clear(self):
         self.cache.clear()
         self.store.clear()
-        if not self.writethrough:
+        if self.writeback:
             self.dirty.clear()
         
     def __contains__(self, key):
@@ -306,15 +306,15 @@ class lruwrap(object):
     def __setitem__(self, key, value):
         self.cache[key] = value
         
-        if self.writethrough:
-            self.store[key] = value
-        else:
+        if self.writeback:
             self.dirty.add(key)
+        else:
+            self.store[key] = value
             
     def __delitem__(self, key):
         try:
             del self.cache[key]
-            if not self.writethrough:
+            if self.writeback:
                 self.dirty.remove(key)
         except KeyError:
             pass
@@ -322,7 +322,7 @@ class lruwrap(object):
         
         
     def sync(self):
-        if not self.writethrough:
+        if self.writeback:
             for key in self.dirty:
                 value = self.cache.peek(key)  # Doesn't change the cache's order
                 self.store[key] = value
