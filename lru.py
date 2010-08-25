@@ -44,9 +44,9 @@ class _dlnode(object):
 
 class lrucache(object):
   
-    def __init__(self, size):
+    def __init__(self, size, callback=None):
       
-    
+        self.callback = callback
         # Initialize the hash table as empty.
         self.table = {}
 
@@ -68,6 +68,11 @@ class lrucache(object):
         return len(self.table)
     
     def clear(self):
+        if self.callback:
+            for key in self.table:
+                node = self.table[key]
+                self.callback(node.key, node.obj)
+                
         self.table.clear()
 	
         node = self.head
@@ -131,9 +136,11 @@ class lrucache(object):
         # If the node already contains something we need to remove the old key from
         # the dictionary.
         if node.key is not None:
+            if self.callback:
+                self.callback(node.key, node.obj)
             del self.table[node.key]
     
-        # Place the key and the object in the node
+        # Place the new key and object in the node
         node.key = key
         node.obj = obj
     
@@ -201,6 +208,8 @@ class lrucache(object):
         assert self.listSize > 1   # Invarient
         node = self.head.prev
         if node.key is not None:
+            if self.callback:
+                self.callback(node.key, node.obj)
             del self.table[node.key]
         
         # Splice the tail node out of the list
@@ -251,18 +260,31 @@ class lrucache(object):
 
 # Wrapper using write-through semantics
 class lruwrap(object):
-    def __init__(self, store, size):
-        self.cache = lrucache(size)
+    def __init__(self, store, size, writethrough=True):
+        self.writethrough = writethrough
+
+        if self.writethrough:
+            self.cache = lrucache(size)
+        else:
+            self.cache = lrucache(size, self.ejectCallBack)
+            self.dirty = set()
+        
         self.store = store
         
+        
+        
     def __len__(self):
+        # XXX We could cache the size
         return len(self.store)
         
     def clear(self):
         self.cache.clear()
+        if self.writethrough:    # XXX Remove this test XXX
+            assert len(self.dirty) == 0
         self.store.clear()
-
+        
     def __contains__(self, key):
+        # XXX Should this bring the key/value into the cache?
         if key in self.cache:
             return True
         if key in self.store:
@@ -280,14 +302,30 @@ class lruwrap(object):
         
     def __setitem__(self, key, value):
         self.cache[key] = value
-        self.store[key] = value
         
+        if self.writethrough:
+            self.store[key] = value
+        else:
+            self.dirty.add(key)
+            
     def __delitem__(self, key):
         try:
             del self.cache[key]
+            if not self.writethrough:
+                self.dirty.remove(key)
         except KeyError:
             pass
         del self.store[key]
+        
+    def ejectCallback(self, key, value):
+        if key in self.dirty:
+            self.store[key] = value
+            self.dirty.remove(key)
+            
+    def __del__(self):
+        # Flush the dirty objects
+        self.sync()
+        
 
 
 class lrudecorator(object):
