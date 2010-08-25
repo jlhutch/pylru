@@ -263,7 +263,6 @@ class lruwrap(object):
         self.store.clear()
 
     def __contains__(self, key):
-        
         if key in self.cache:
             return True
         if key in self.store:
@@ -292,17 +291,17 @@ class lruwrap(object):
 
 
 class lrudecorator(object):
-    def __init__(self, func, size):
-        self.func = func
+    def __init__(self, size):
         self.cache = lrucache(size)
         
-    def __call__(self, *args, **kwargs):
-        try:
-            value = self.cache[(args, kwargs)]
-        except KeyError:
-            pass
-        
-        value = self.func(*args, **kwargs)
-        self.cache[(args, kwargs)] = value
-        return value
-        
+    def __call__(self, func):
+        def wrapped(*args):  # XXX What about kwargs
+            try:
+                value = self.cache[args]
+            except KeyError:
+                pass
+            
+            value = func(*args)
+            self.cache[args] = value
+            return value
+        return wrapped
