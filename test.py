@@ -150,6 +150,34 @@ def wraptest2():
             tmp2 = None
 
         assert tmp1 == tmp2
+
+
+def wraptest3():
+    import random
+
+    q = dict()
+    with lruwrap(q, 32, True) as x:
+        for i in range(256):
+            a = random.randint(0, 256)
+            b = random.randint(0, 256)
+        
+            x[a] = b
+        
+    for i in range(512):
+        a = random.randint(0, 256)
+        tmp1 = None
+        tmp2 = None
+        try:
+            tmp1 = x[a]
+        except KeyError:
+            tmp1 = None
+           
+        try:
+            tmp2 = q[a]
+        except KeyError:
+            tmp2 = None
+
+        assert tmp1 == tmp2
         
         
 @lrudecorator(14)
@@ -161,6 +189,7 @@ if __name__ == '__main__':
     
     wraptest()
     wraptest2()
+    wraptest3()
     
     for i in range(300):
         x = random.randint(0, 25)

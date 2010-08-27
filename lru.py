@@ -328,8 +328,12 @@ class lruwrap(object):
                 self.store[key] = value
             self.dirty.clear()
             
-    def __del__(self):
+    def __enter__(self):
+        return self
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
         self.sync()
+        return False
 
 
 class lrudecorator(object):
