@@ -60,9 +60,10 @@ class lrucache(object):
         self.head.prev = self.head
 	
         self.listSize = 1
+        
+        # Adjust the size
+        self.size(size)
 
-        for i in range(1, size):
-            self.addTailNode()
 
     def __len__(self):
         return len(self.table)
@@ -185,46 +186,46 @@ class lrucache(object):
         assert size > 0
         
         if size > self.listSize:
-            for i in range(size - self.listSize):
-                self.addTailNode()
+            self.addTailNode(size - self.listSize)
         elif size < self.listSize:
-            for i in range(self.listSize - size):
-                self.removeTailNode()
+            self.removeTailNode(self.listSize - size)
                 
         return self.listSize
             
 	
-    def addTailNode(self):
-        node = _dlnode()
-        node.next = self.head
-        node.prev = self.head.prev
-  
-        self.head.prev.next = node
-        self.head.prev = node
+    def addTailNode(self, n):
+        for i in range(n):
+            node = _dlnode()
+            node.next = self.head
+            node.prev = self.head.prev
+      
+            self.head.prev.next = node
+            self.head.prev = node
         
-        self.listSize += 1
+        self.listSize += n
 
-    def removeTailNode(self):
-        
-        assert self.listSize > 1   # Invarient
-        node = self.head.prev
-        if node.key is not None:
-            if self.callback:
-                self.callback(node.key, node.obj)
-            del self.table[node.key]
-        
-        # Splice the tail node out of the list
-        self.head.prev = node.prev
-        node.prev.next = self.head
-        
-        self.listSize -= 1
-        
-        node.prev = None
-        node.next = None
-        
-        node.key = None
-        node.obj = None
-        
+
+    def removeTailNode(self, n):
+        assert self.listSize > 1   # Invarient. XXX REMOVE this line XXX
+        for i in range(n):
+            node = self.head.prev
+            if node.key is not None:
+                if self.callback:
+                    self.callback(node.key, node.obj)
+                del self.table[node.key]
+            
+            # Splice the tail node out of the list
+            self.head.prev = node.prev
+            node.prev.next = self.head
+            
+            # The next four lines are not strictly necessary.
+            node.prev = None
+            node.next = None
+            
+            node.key = None
+            node.obj = None
+            
+        self.listSize -= n
   
     def __del__(self):
         # When we are finished with the cache, special care is taken to break the
