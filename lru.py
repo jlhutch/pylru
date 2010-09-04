@@ -180,15 +180,12 @@ class lrucache(object):
     
     def size(self, size=None):
       
-        if size is None:
-            return self.listSize
-      
-        assert size > 0
-        
-        if size > self.listSize:
-            self.addTailNode(size - self.listSize)
-        elif size < self.listSize:
-            self.removeTailNode(self.listSize - size)
+        if size is not None:
+            assert size > 0
+            if size > self.listSize:
+                self.addTailNode(size - self.listSize)
+            elif size < self.listSize:
+                self.removeTailNode(self.listSize - size)
                 
         return self.listSize
             
@@ -313,13 +310,30 @@ class lruwrap(object):
             self.store[key] = value
             
     def __delitem__(self, key):
-        try:
-            del self.cache[key]
-            if self.writeback:
+        if self.writeback:
+            found = False
+            try:
+                del self.cache[key]
+                found = True
                 self.dirty.remove(key)
-        except KeyError:
-            pass
-        del self.store[key]
+            except KeyError:
+                pass
+            
+            try:
+                del self.store[key]
+                found = True
+            except KeyError:
+                pass
+            
+            if not found:  # If not found in cache or store, raise error.
+                raise KeyError
+
+        else:  # Write-through behavior, cache and store should be consistent
+            del self.store[key]
+            try:
+                del self.cache[key]
+            except KeyError:
+                pass
         
         
     def sync(self):
@@ -344,7 +358,7 @@ class lrudecorator(object):
     def __call__(self, func):
         def wrapped(*args):  # XXX What about kwargs
             try:
-                value = self.cache[args]
+                return self.cache[args]
             except KeyError:
                 pass
             
