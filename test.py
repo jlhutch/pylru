@@ -1,27 +1,8 @@
 
-
 from lru import *
+import random
 
-def _selftest():
-    
-    class simplelrucache:
 
-        def __init__(self, size):
-            self.size = size
-            self.length = 0
-            self.items = []
-
-        def __contains__(self, key):
-            for x in self.items:
-                if x[0] == key:
-                    return True
-    
-            return False
-
-	
-	
-	
-	
 class simplelrucache:
   
     def __init__(self, size):
@@ -77,164 +58,126 @@ class simplelrucache:
     
         return
       
+
+def basictest():
+    a = lrucache(64)
+    b = simplelrucache(64)
   
-    
-    
-    
-def testa():
-  
-    a = lrucache(16)
-  
-    for i in range(len(vect)):
-        a[vect[i]] = 0
-    
-def testb():
-  
-    a = simplelrucache(16)
-  
-    for i in range(len(vect)):
-        a[vect[i]] = 0
-
-
-def wraptest():
-    import random
-
-    q = dict()
-    x = lruwrap(q, 32)
-    for i in range(256):
-        a = random.randint(0, 256)
-        b = random.randint(0, 256)
-    
-        x[a] = b
-    
-    for i in range(512):
-        a = random.randint(0, 256)
-        tmp1 = None
-        tmp2 = None
-        try:
-            tmp1 = x[a]
-        except KeyError:
-            tmp1 = None
-           
-        try:
-            tmp2 = q[a]
-        except KeyError:
-            tmp2 = None
-
-        assert tmp1 == tmp2
-        
-def wraptest2():
-    import random
-
-    q = dict()
-    x = lruwrap(q, 32, True)
-    for i in range(256):
-        a = random.randint(0, 256)
-        b = random.randint(0, 256)
-    
-        x[a] = b
-        
-    x.sync()
-    for i in range(512):
-        a = random.randint(0, 256)
-        tmp1 = None
-        tmp2 = None
-        try:
-            tmp1 = x[a]
-        except KeyError:
-            tmp1 = None
-           
-        try:
-            tmp2 = q[a]
-        except KeyError:
-            tmp2 = None
-
-        assert tmp1 == tmp2
-
-
-def wraptest3():
-    import random
-
-    q = dict()
-    with lruwrap(q, 32, True) as x:
-        for i in range(256):
-            a = random.randint(0, 256)
-            b = random.randint(0, 256)
-        
-            x[a] = b
-        
-    for i in range(512):
-        a = random.randint(0, 256)
-        tmp1 = None
-        tmp2 = None
-        try:
-            tmp1 = x[a]
-        except KeyError:
-            tmp1 = None
-           
-        try:
-            tmp2 = q[a]
-        except KeyError:
-            tmp2 = None
-
-        assert tmp1 == tmp2
-        
-        
-@lrudecorator(14)
-def cube(x):
-    return x*x*x
-    
-if __name__ == '__main__':
-    import random
-    
-    wraptest()
-    wraptest2()
-    wraptest3()
-    
-    for i in range(300):
-        x = random.randint(0, 25)
-        assert cube(x) == x**3
-    
-  
-
-  
-    a = lrucache(20)
-    b = simplelrucache(20)
-  
-    for i in range(256):
+    for i in range(500):
         x = random.randint(0, 256)
         y = random.randint(0, 256)
     
         a[x] = y
         b[x] = y
+        verify(a, b)
     
-        q = []
-        z = a.head
-        for j in range(len(a.table)):
-            q.append([z.key, z.obj])
-            z = z.next
-      
-        if q != b.cache[::-1]:
-            print i
-            print b.cache[::-1]
-            print q
-            print a.table.keys()
-            assert False
-  
-  
+    for i in range(500):
+        x = random.randint(0, 256)
+        if x in a:
+            assert x in b
+            z = a[x]
+            z += b[x]
+        else:
+            assert x not in b
+        verify(a, b)
+        
+    for i in range(256):
+        x = random.randint(0, 256)
+        if x in a:
+            assert x in b
+            del a[x]
+            del b[x]
+        else:
+            assert x not in b
+        verify(a, b)
+        
+        
+        
+        
 
-    from timeit import Timer
-    import random
-  
-    global vect
-  
-    vect = []
-    for i in range(1000000):
-        vect.append(random.randint(0, 1000))
-  
-    t = Timer("testa()", "from __main__ import testa")
-    print t.timeit(1)
+def verify2(x, q, n):
+    for i in range(n):
+        tmp1 = None
+        tmp2 = None
+        try:
+            tmp1 = x[i]
+        except KeyError:
+            tmp1 = None
+           
+        try:
+            tmp2 = q[i]
+        except KeyError:
+            tmp2 = None
 
-    t = Timer("testb()", "from __main__ import testb")
-    print t.timeit(1)
+        assert tmp1 == tmp2
+
+def wraptest():
+    q = dict()
+    x = lruwrap(q, 32)
+    for i in range(256):
+        a = random.randint(0, 128)
+        b = random.randint(0, 256)
+    
+        x[a] = b
+    
+    verify2(x, q, 128)
+        
+def wraptest2():
+
+    q = dict()
+    x = lruwrap(q, 32, True)
+    for i in range(256):
+        a = random.randint(0, 128)
+        b = random.randint(0, 256)
+    
+        x[a] = b
+        
+    x.sync()
+    verify2(x, q, 128)
+
+
+def wraptest3():
+
+    q = dict()
+    with lruwrap(q, 32, True) as x:
+        for i in range(256):
+            a = random.randint(0, 128)
+            b = random.randint(0, 256)
+        
+            x[a] = b
+        
+    verify2(x, q, 128)
+        
+        
+@lrudecorator(25)
+def square(x):
+    return x*x
+    
+def testDecorator():
+    for i in range(500):
+        x = random.randint(0, 100)
+        assert square(x) == x*x
+    
+    
+def verify(a, b):
+    q = []
+    z = a.head
+    for j in range(len(a.table)):
+        q.append([z.key, z.obj])
+        z = z.next
+  
+    if q != b.cache[::-1]:
+        assert False
+    
+    
+if __name__ == '__main__':
+    
+    
+    basictest()
+    wraptest()
+    wraptest2()
+    wraptest3()
+    testDecorator()
+
+
   

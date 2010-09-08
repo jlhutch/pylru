@@ -3,7 +3,7 @@
 # Cache implementaion with a Least Recently Used (LRU) replacement policy and a
 # basic dictionary interface.
 
-# Copyright (C) 2006, 2009  Jay Hutchinson
+# Copyright (C) 2006, 2009, 2010  Jay Hutchinson
 
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -21,7 +21,7 @@
 
 
 # The cache is implemented using a combination of a hash table (python
-# dictionary) and a circluar doubly linked list. Objects in the cache are
+# dictionary) and a circular doubly linked list. Objects in the cache are
 # stored in nodes. These nodes make up the linked list. The list is used to
 # efficiently maintain the order that the objects have been used in. The front
 # or "head" of the list contains the most recently used object, the "tail" of
