@@ -1,5 +1,5 @@
 
-from lru import *
+from pylru import *
 import random
 
 
@@ -60,19 +60,19 @@ class simplelrucache:
       
 
 def basictest():
-    a = lrucache(64)
-    b = simplelrucache(64)
+    a = lrucache(128)
+    b = simplelrucache(128)
   
     for i in range(500):
-        x = random.randint(0, 256)
-        y = random.randint(0, 256)
+        x = random.randint(0, 512)
+        y = random.randint(0, 512)
     
         a[x] = y
         b[x] = y
         verify(a, b)
     
-    for i in range(500):
-        x = random.randint(0, 256)
+    for i in range(1000):
+        x = random.randint(0, 512)
         if x in a:
             assert x in b
             z = a[x]
@@ -82,7 +82,7 @@ def basictest():
         verify(a, b)
         
     for i in range(256):
-        x = random.randint(0, 256)
+        x = random.randint(0, 512)
         if x in a:
             assert x in b
             del a[x]
@@ -172,6 +172,7 @@ def verify(a, b):
     
 if __name__ == '__main__':
     
+    random.seed()
     
     basictest()
     wraptest()
