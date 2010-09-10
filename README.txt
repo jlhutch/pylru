@@ -47,7 +47,7 @@ The lrucache takes an optional callback function as a second argument. Since the
     # the fixed cache size. But, not before the callback is called to let you
     # know.
     
-Often a cache is used to speed up access to some other low latency object. If that object has a dictionary interface a convieniance wrapper class provided by PyLRU can be used. This class takes as an argument the object you want to wrap and the cache size. It then creates an LRU cache for the object and automatically manages it. For example, imagine you have an object with a dictionary interface that reads/writes its values to and from a remote server. Let us call this object slowDict::
+Often a cache is used to speed up access to some other low latency object. If that object has a dictionary interface a convenience wrapper class provided by PyLRU can be used. This class takes as an argument the object you want to wrap and the cache size. It then creates an LRU cache for the object and automatically manages it. For example, imagine you have an object with a dictionary interface that reads/writes its values to and from a remote server. Let us call this object slowDict::
 
     import pylru
     
@@ -74,7 +74,7 @@ The programmer is responsible for one thing though. They MUST call sync() when t
     # DON'T forget to call sync() when finished
     cacheDict.sync()
     
- To help the programmer with this the lruwrap can be used in a with statement::
+To help the programmer with this the lruwrap can be used in a with statement::
     
     with pylru.lruwrap(slowDict, size, True) as cacheDict
         

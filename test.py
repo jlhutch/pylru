@@ -59,17 +59,15 @@ class simplelrucache:
         return
       
 
-def basictest():
-    a = lrucache(128)
-    b = simplelrucache(128)
-  
-    for i in range(500):
+def test(a, b, c, d, verify):
+    
+    for i in range(1000):
         x = random.randint(0, 512)
         y = random.randint(0, 512)
     
         a[x] = y
         b[x] = y
-        verify(a, b)
+        verify(c, d)
     
     for i in range(1000):
         x = random.randint(0, 512)
@@ -79,7 +77,7 @@ def basictest():
             z += b[x]
         else:
             assert x not in b
-        verify(a, b)
+        verify(c, d)
         
     for i in range(256):
         x = random.randint(0, 512)
@@ -89,92 +87,84 @@ def basictest():
             del b[x]
         else:
             assert x not in b
-        verify(a, b)
+        verify(c, d)
         
         
+def testcache():
+    def verify(a, b):
+        q = []
+        z = a.head
+        for j in range(len(a.table)):
+            q.append([z.key, z.obj])
+            z = z.next
+      
+        assert q == b.cache[::-1]
         
         
-
-def verify2(x, q, n):
-    for i in range(n):
-        tmp1 = None
-        tmp2 = None
-        try:
-            tmp1 = x[i]
-        except KeyError:
-            tmp1 = None
-           
-        try:
-            tmp2 = q[i]
-        except KeyError:
-            tmp2 = None
-
-        assert tmp1 == tmp2
+    a = lrucache(128)
+    b = simplelrucache(128)
+    
+    test(a, b, a, b, verify)
+        
 
 def wraptest():
+    
+    def verify(p, q):
+        assert p == q
+    
+    p = dict()
     q = dict()
-    x = lruwrap(q, 32)
-    for i in range(256):
-        a = random.randint(0, 128)
-        b = random.randint(0, 256)
+    x = lruwrap(q, 128)
     
-        x[a] = b
-    
-    verify2(x, q, 128)
+    test(p, x, p, q, verify)
+        
+        
         
 def wraptest2():
 
-    q = dict()
-    x = lruwrap(q, 32, True)
-    for i in range(256):
-        a = random.randint(0, 128)
-        b = random.randint(0, 256)
+    def verify(x, y):
+        pass
     
-        x[a] = b
-        
+    p = dict()
+    q = dict()
+    x = lruwrap(q, 128, True)
+    
+    test(p, x, None, None, verify)
+    
     x.sync()
-    verify2(x, q, 128)
-
+    assert p == q
 
 def wraptest3():
 
+    def verify(x, y):
+        pass
+    
+    p = dict()
     q = dict()
-    with lruwrap(q, 32, True) as x:
-        for i in range(256):
-            a = random.randint(0, 128)
-            b = random.randint(0, 256)
-        
-            x[a] = b
-        
-    verify2(x, q, 128)
-        
-        
+    with lruwrap(q, 128, True) as x:
+        test(p, x, None, None, verify)
+    
+    assert p == q
+    
+    
 @lrudecorator(25)
 def square(x):
     return x*x
     
 def testDecorator():
-    for i in range(500):
-        x = random.randint(0, 100)
+    for i in range(1000):
+        x = random.randint(0, 1493)
         assert square(x) == x*x
     
     
-def verify(a, b):
-    q = []
-    z = a.head
-    for j in range(len(a.table)):
-        q.append([z.key, z.obj])
-        z = z.next
-  
-    if q != b.cache[::-1]:
-        assert False
+
     
     
 if __name__ == '__main__':
     
     random.seed()
     
-    basictest()
+    testcache()
     wraptest()
     wraptest2()
     wraptest3()
