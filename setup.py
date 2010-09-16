@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name = "pylru",
-    version = "0.9.1",
+    version = "1.0.0",
     py_modules=['pylru'],
     description = "A least recently used (LRU) cache implementation",
     author = "Jay Hutchinson",
@@ -12,7 +12,7 @@ setup(
         "Programming Language :: Python :: 2.6",
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU General Public License (GPL)",
         "Operating System :: OS Independent",

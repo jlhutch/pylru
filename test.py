@@ -2,7 +2,6 @@
 from pylru import *
 import random
 
-
 class simplelrucache:
   
     def __init__(self, size):
@@ -29,7 +28,7 @@ class simplelrucache:
                 self.cache.append(x)
                 return x[1]
       
-        assert False
+        raise KeyError
   
   
     def __setitem__(self, key, obj):
@@ -47,8 +46,7 @@ class simplelrucache:
     
         self.cache.append([key, obj])
     
-        return
-  
+    
     def __delitem__(self, key):
     
         for i in range(len(self.cache)):
@@ -56,7 +54,7 @@ class simplelrucache:
                 del self.cache[i]
                 return
     
-        return
+        raise KeyError
       
 
 def test(a, b, c, d, verify):
@@ -164,11 +162,12 @@ if __name__ == '__main__':
     
     random.seed()
     
-    testcache()
-    wraptest()
-    wraptest2()
-    wraptest3()
-    testDecorator()
+    for i in range(20):
+        testcache()
+        wraptest()
+        wraptest2()
+        wraptest3()
+        testDecorator()
 
 
   
