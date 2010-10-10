@@ -2,6 +2,9 @@
 from pylru import *
 import random
 
+# This tests PyLRU by fuzzing it with random operations, then checking the
+# results against another, simpler, LRU cache implementation.
+
 class simplelrucache:
   
     def __init__(self, size):
@@ -161,6 +164,7 @@ def testDecorator():
 if __name__ == '__main__':
     
     random.seed()
+
     
     for i in range(20):
         testcache()

@@ -51,10 +51,9 @@ class lrucache(object):
         self.table = {}
 
     
-        # Initalize the list with 'size' empty nodes. Create the first node and
+        # Initalize the list with one empty node. Create a node and
         # assign it to the 'head' variable, which represents the head node in the
-        # list. Then each iteration of the loop creates a subsequent node and
-        # inserts it directly after the head node.
+        # list.
         self.head = _dlnode()
         self.head.next = self.head
         self.head.prev = self.head
@@ -189,7 +188,8 @@ class lrucache(object):
                 
         return self.listSize
             
-	
+	# Increases the size of the cache by inserting n empty nodes at the tail of
+    # the list.
     def addTailNode(self, n):
         for i in range(n):
             node = _dlnode()
@@ -201,7 +201,8 @@ class lrucache(object):
         
         self.listSize += n
 
-
+    # Decreases the size of the list by removing n nodes from the tail of the
+    # list.
     def removeTailNode(self, n):
         assert self.listSize > 1   # Invarient. XXX REMOVE this line XXX
         for i in range(n):
@@ -223,21 +224,6 @@ class lrucache(object):
             node.obj = None
             
         self.listSize -= n
-  
-    def __del__(self):
-        # When we are finished with the cache, special care is taken to break the
-        # doubly linked list, so that there are no cycles. First all of the 'prev'
-        # links are broken. Then the 'next' link between the 'tail' node and the
-        # 'head' node is broken.
-    
-        tail = self.head.prev
-    
-        node = self.head
-        while node.prev is not None:
-            node = node.prev
-            node.next.prev = None
-      
-        tail.next = None
   
   
     # This method adjusts the doubly linked list so that 'node' directly preeceds
