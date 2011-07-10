@@ -24,6 +24,10 @@ An LRU cache object has a dictionary like interface and can be used in the same 
     value = cache[key]  # Lookup a value given its key
     del cache[key]      # Remove a value given its key
 
+    cache.keys()        # Returns the keys in the cache *
+    cache.values()      # Returns the values in the cache *
+    cache.items()       # Returns the key, value pairs in the cache *
+
     cache.size()        # Returns the size of the cache
     cache.size(x)       # Changes the size of the cache. x MUST be greater than
                         # zero.
@@ -32,6 +36,8 @@ An LRU cache object has a dictionary like interface and can be used in the same 
                         # x will be less than or equal to cache.size()
 
     cache.clear()       # Remove all elements from the cache.
+
+* These calls have no effect on the cache order.
 
 The lrucache takes an optional callback function as a second argument. Since the cache has a fixed size some operations, such as an insertion, may cause a key/value pair to be ejected. If the optional callback function is given it will be called when this occurs. For example::
 
@@ -91,3 +97,17 @@ PyLRU also provides a function decorator::
         return x*x
 
     # Now results of the square function are cached for future lookup.
+
+To iterate over the cache elements, use .items()::
+
+    import pylru
+
+    cache = pylru.lrucache(size, callback)
+
+    # items() returns a list of key, value pairs without modifying order.
+    for key, val in cache.items():
+      print key, val
+
+    # WARNING: while keys() does not modify order, the cache[key] call does!
+    for key in cache.keys():
+      print key, cache[key]

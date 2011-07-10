@@ -178,7 +178,23 @@ class lrucache(object):
         self.mtf(node)
         self.head = node.next
 
+    def items(self):
 
+        # return the (key, value) pairs (from most recent to least)
+        # without modifying the cache order
+        return zip(self.keys(), self.values())
+
+    def keys(self):
+
+        # return the keys (from most recent to least) in the cache
+        # does not modify the cache order
+        return self.table.keys()
+
+    def values(self):
+
+        # return the values in the cache (from most recent to least)
+        # does not modify the cache order
+        return [node.obj for node in self.table.values()]
 
     def size(self, size=None):
 
@@ -323,7 +339,6 @@ class lruwrap(object):
                 del self.cache[key]
             except KeyError:
                 pass
-
 
     def sync(self):
         if self.writeback:
