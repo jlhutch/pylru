@@ -39,87 +39,90 @@
 # stored under respectivly.
 class _dlnode(object):
     def __init__(self):
-	    self.key = None
+        self.key = None
+
+
 
 
 class lrucache(object):
-  
+
     def __init__(self, size, callback=None):
-      
+
         self.callback = callback
         # Initialize the hash table as empty.
         self.table = {}
 
-    
+
         # Initalize the list with one empty node. Create a node and
         # assign it to the 'head' variable, which represents the head node in the
         # list.
         self.head = _dlnode()
         self.head.next = self.head
         self.head.prev = self.head
-	
+
         self.listSize = 1
-        
+
         # Adjust the size
         self.size(size)
 
 
     def __len__(self):
         return len(self.table)
-    
+
     # Does not call callback to write any changes!
     def clear(self):
         self.table.clear()
-	
+
         node = self.head
         for i in range(self.listSize):
             node.key = None
             node.obj = None
             node = node.next
-            
-    
+
+
     def __contains__(self, key):
         return key in self.table
         # XXX Should this move the object to front of list? XXX
-    
+
     def peek(self, key):
         # Look up the node
         node = self.table[key]
         return node.obj
-    
+
+
     def __getitem__(self, key):
-    
+
         # Look up the node
         node = self.table[key]
-    
+
         # Update the list ordering. Move this node so that is directly proceeds the
         # head node. Then set the 'head' variable to it. This makes it the new head
         # of the list.
         self.mtf(node)
         self.head = node
-    
+
         # Return the object
         return node.obj
-  
-  
+
+
     def __setitem__(self, key, obj):
-    
+
         # First, see if any object is stored under 'key' in the cache already. If
         # so we are going to replace that object with the new one.
         if key in self.table:
-      
+
             # Lookup the node
             node = self.table[key]
-      
+
             # Replace the object
             node.obj = obj
-      
+
             # Update the list ordering.
             self.mtf(node)
             self.head = node
-      
+
             return
-      
+
         # Ok, no object is currently stored under 'key' in the cache. We need to
         # choose a node to place the object 'obj' in. There are two cases. If the
         # cache is full some object will have to be pushed out of the cache. We
@@ -129,44 +132,44 @@ class lrucache(object):
         # nodes are always together at the tail end of the list. Thus, in either
         # case, by chooseing the node at the tail of the list our conditions are
         # satisfied.
-    
+
         # Since the list is circular, the tail node directly preceeds the 'head'
         # node.
         node = self.head.prev
-    
+
         # If the node already contains something we need to remove the old key from
         # the dictionary.
         if node.key is not None:
             if self.callback:
                 self.callback(node.key, node.obj)
             del self.table[node.key]
-    
+
         # Place the new key and object in the node
         node.key = key
         node.obj = obj
-    
+
         # Add the node to the dictionary under the new key.
-        self.table[node.key] = node 
-    
+        self.table[node.key] = node
+
         # We need to move the node to the head of the list. The node is the tail
         # node, so it directly preceeds the head node due to the list being
         # circular. Therefore, the ordering is already correct, we just need to
         # adjust the 'head' variable.
         self.head = node
-  
-  
+
+
     def __delitem__(self, key):
-    
+
         # Lookup the node, then remove it from the hash table.
         node = self.table[key]
         del self.table[key]
-    
+
         # Set the 'key' to None to indicate that the node is empty. We also set the
         # 'obj' to None to release the reference to the object, though it is not
         # strictly necessary.
         node.key = None
         node.obj = None
-    
+
         # Because this node is now empty we want to reuse it before any non-empty
         # node. To do that we want to move it to the tail of the list. We move it
         # so that it directly preceeds the 'head' node. This makes it the tail
@@ -175,30 +178,46 @@ class lrucache(object):
         self.mtf(node)
         self.head = node.next
 
-      
-    
+    def items(self):
+
+        # return the (key, value) pairs (from most recent to least)
+        # without modifying the cache order
+        return zip(self.keys(), self.values())
+
+    def keys(self):
+
+        # return the keys (from most recent to least) in the cache
+        # does not modify the cache order
+        return self.table.keys()
+
+    def values(self):
+
+        # return the values in the cache (from most recent to least)
+        # does not modify the cache order
+        return [node.obj for node in self.table.values()]
+
     def size(self, size=None):
-      
+
         if size is not None:
             assert size > 0
             if size > self.listSize:
                 self.addTailNode(size - self.listSize)
             elif size < self.listSize:
                 self.removeTailNode(self.listSize - size)
-                
+
         return self.listSize
-            
-	# Increases the size of the cache by inserting n empty nodes at the tail of
+
+    # Increases the size of the cache by inserting n empty nodes at the tail of
     # the list.
     def addTailNode(self, n):
         for i in range(n):
             node = _dlnode()
             node.next = self.head
             node.prev = self.head.prev
-      
+
             self.head.prev.next = node
             self.head.prev = node
-        
+
         self.listSize += n
 
     # Decreases the size of the list by removing n nodes from the tail of the
@@ -211,33 +230,33 @@ class lrucache(object):
                 if self.callback:
                     self.callback(node.key, node.obj)
                 del self.table[node.key]
-            
+
             # Splice the tail node out of the list
             self.head.prev = node.prev
             node.prev.next = self.head
-            
+
             # The next four lines are not strictly necessary.
             node.prev = None
             node.next = None
-            
+
             node.key = None
             node.obj = None
-            
+
         self.listSize -= n
-  
-  
+
+
     # This method adjusts the doubly linked list so that 'node' directly preeceds
     # the 'head' node. Note that it works even if 'node' already directly
     # preceeds the 'head' node or if 'node' is the 'head' node, in either case
     # the order of the list is unchanged.
     def mtf(self, node):
-    
+
         node.prev.next = node.next
         node.next.prev = node.prev
 
         node.prev = self.head.prev
         node.next = self.head.prev.next
-    
+
         node.next.prev = node
         node.prev.next = node
 
@@ -257,44 +276,44 @@ class lruwrap(object):
                     self.store[key] = value
                     self.dirty.remove(key)
             self.cache = lrucache(size, callback)
-        
+
     def __len__(self):
         return len(self.store)
-        
+
     def size(self, size=None):
         self.cache.size(size)
-        
+
     def clear(self):
         self.cache.clear()
         self.store.clear()
         if self.writeback:
             self.dirty.clear()
-        
+
     def __contains__(self, key):
         # XXX Should this bring the key/value into the cache?
         if key in self.cache:
             return True
         if key in self.store:
             return True
-            
+
         return False
-    
+
     def __getitem__(self, key):
         try:
             return self.cache[key]
         except KeyError:
             pass
-        
+
         return self.store[key] # XXX Re-raise exception?
-        
+
     def __setitem__(self, key, value):
         self.cache[key] = value
-        
+
         if self.writeback:
             self.dirty.add(key)
         else:
             self.store[key] = value
-            
+
     def __delitem__(self, key):
         if self.writeback:
             found = False
@@ -304,13 +323,13 @@ class lruwrap(object):
                 self.dirty.remove(key)
             except KeyError:
                 pass
-            
+
             try:
                 del self.store[key]
                 found = True
             except KeyError:
                 pass
-            
+
             if not found:  # If not found in cache or store, raise error.
                 raise KeyError
 
@@ -320,18 +339,17 @@ class lruwrap(object):
                 del self.cache[key]
             except KeyError:
                 pass
-        
-        
+
     def sync(self):
         if self.writeback:
             for key in self.dirty:
                 value = self.cache.peek(key)  # Doesn't change the cache's order
                 self.store[key] = value
             self.dirty.clear()
-            
+
     def __enter__(self):
         return self
-        
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.sync()
         return False
@@ -340,14 +358,14 @@ class lruwrap(object):
 class lrudecorator(object):
     def __init__(self, size):
         self.cache = lrucache(size)
-        
+
     def __call__(self, func):
         def wrapped(*args):  # XXX What about kwargs
             try:
                 return self.cache[args]
             except KeyError:
                 pass
-            
+
             value = func(*args)
             self.cache[args] = value
             return value
