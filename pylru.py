@@ -178,23 +178,37 @@ class lrucache(object):
         self.mtf(node)
         self.head = node.next
 
+    def __iter__(self):
+
+        # Return an iterator that returns the keys in the cache in order from
+        # the most recently to least recently used. Does not modify the cache
+        # order.
+        for node in self.dli():
+            yield node.key
+
     def items(self):
 
-        # return the (key, value) pairs (from most recent to least)
-        # without modifying the cache order
-        return zip(self.keys(), self.values())
+        # Return an iterator that returns the (key, value) pairs in the cache
+        # in order from the most recently to least recently used. Does not
+        # modify the cache order.
+        for node in self.dli():
+            yield (node.key, node.obj)
 
     def keys(self):
 
-        # return the keys (from most recent to least) in the cache
-        # does not modify the cache order
-        return self.table.keys()
+        # Return an iterator that returns the keys in the cache in order from
+        # the most recently to least recently used. Does not modify the cache
+        # order.
+        for node in self.dli():
+            yield node.key
 
     def values(self):
 
-        # return the values in the cache (from most recent to least)
-        # does not modify the cache order
-        return [node.obj for node in self.table.values()]
+        # Return an iterator that returns the values in the cache in order from
+        # the most recently to least recently used. Does not modify the cache
+        # order.
+        for node in self.dli():
+            yield node.obj
 
     def size(self, size=None):
 
@@ -259,6 +273,12 @@ class lrucache(object):
 
         node.next.prev = node
         node.prev.next = node
+
+    def dli(self):
+        node = self.head
+        for i in range(len(self)):
+            yield node
+            node = node.next
 
 
 

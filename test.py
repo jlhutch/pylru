@@ -101,6 +101,14 @@ def testcache():
 
         assert q == b.cache[::-1]
 
+        q2 = []
+        for x, y in q:
+            q2.append((x, y))
+
+        assert list(a.items()) == q2
+        assert zip(a.keys(), a.values()) == q2
+        assert list(a.keys()) == list(a)
+
 
     a = lrucache(128)
     b = simplelrucache(128)
@@ -158,30 +166,6 @@ def testDecorator():
         assert square(x) == x*x
 
 
-def testItems():
-    a = lrucache(128)
-    b = simplelrucache(128)
-
-    for i in range(1000):
-        x = random.randint(0, 512)
-        y = random.randint(0, 512)
-        a[x] = y
-        b[x] = y
-
-    for k, v in a.items():
-        assert k in a
-        assert a[k] == v
-        assert b[k] == v
-
-    # ensure the order returned in items() is correct.
-    items = a.items()
-    for k, v in reversed(items):
-        a[k] = v
-
-    # test the order is returned correctly.
-    assert items == a.items()
-
-
 if __name__ == '__main__':
 
     random.seed()
@@ -193,6 +177,5 @@ if __name__ == '__main__':
         wraptest2()
         wraptest3()
         testDecorator()
-        testItems()
 
 
