@@ -3,7 +3,7 @@
 # Cache implementaion with a Least Recently Used (LRU) replacement policy and a
 # basic dictionary interface.
 
-# Copyright (C) 2006, 2009, 2010  Jay Hutchinson
+# Copyright (C) 2006, 2009, 2010, 2011  Jay Hutchinson
 
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -367,12 +367,48 @@ class lruwrap(object):
             except KeyError:
                 pass
 
+    def __iter__(self):
+        return self.keys()
+
+    def keys(self):
+        if self.writeback:
+            for key in self.store.keys():
+                if key not in self.dirty:
+                    yield key
+                
+            for key in self.dirty:
+                yield key
+        else:
+            for key in self.store.keys():
+                yield key
+
+    def values(self):
+        for key, value in self.items():
+            yield value
+
+    def items(self):
+        if self.writeback:
+            for key, value in self.store.items():
+                if key not in self.dirty:
+                    yield (key, value)
+                
+            for key in self.dirty:
+                value = self.cache.peek(key)
+                yield (key, value)
+        else:
+            for item in self.store.items():
+                yield item
+
     def sync(self):
         if self.writeback:
             for key in self.dirty:
                 value = self.cache.peek(key)  # Doesn't change the cache's order
                 self.store[key] = value
             self.dirty.clear()
+
+    def flush(self):
+        self.sync()
+        self.cache.clear()
 
     def __enter__(self):
         return self
