@@ -298,6 +298,11 @@ class lruwrap(object):
             self.cache = lrucache(size, callback)
 
     def __len__(self):
+        # XXX Need a way to efficiently return len() when writeback is turned
+        # on. If you really need the length you can call sync() then call
+        # len(self.store), but syncing all of the time kind of defeats the
+        # purpose of a writeback cache.
+        assert self.writeback == False
         return len(self.store)
 
     def size(self, size=None):
@@ -324,7 +329,9 @@ class lruwrap(object):
         except KeyError:
             pass
 
-        return self.store[key] # XXX Re-raise exception?
+        value = self.store[key]
+        self.cache[key] = value
+        return value
 
     def __setitem__(self, key, value):
         self.cache[key] = value
