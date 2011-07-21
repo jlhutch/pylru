@@ -67,7 +67,6 @@ class lrucache(object):
     def __len__(self):
         return len(self.table)
 
-    # Does not call callback to write any changes!
     def clear(self):
         for node in self.dli():
             node.key = None
@@ -77,7 +76,6 @@ class lrucache(object):
 
 
     def __contains__(self, key):
-        # XXX Should this move the object to front of list? XXX
         return key in self.table
 
     # Looks up a value in the cache without affecting cache order.
@@ -278,17 +276,12 @@ class lrucache(object):
             node = node.next
 
 
-def lruwrap(store, size, writeback=False):
-    if not writeback:
-        cache = lrucache(size)
-        return WriteThroughCacheManager(store, cache)
-    else:
-         return WriteBackCacheManager(store, size)
+         
 
 class WriteThroughCacheManager(object):
-    def __init__(self, store, cache):
+    def __init__(self, store, size):
         self.store = store
-        self.cache = cache
+        self.cache = lrucache(size)
 
     def __len__(self):
         return len(self.store)
@@ -302,8 +295,7 @@ class WriteThroughCacheManager(object):
         self.store.clear()
 
     def __contains__(self, key):
-        # XXX Should this bring the key/value into the cache?
-        # Check the cache first, since if it is there we can return quickly.
+        # Check the cache first. If it is there we can return quickly.
         if key in self.cache:
             return True
 
@@ -362,9 +354,8 @@ class WriteThroughCacheManager(object):
 class WriteBackCacheManager(object):
     def __init__(self, store, size):
         self.store = store
-
-        # Create a set to hold the dirty keys. Initially empty to match the
-        # empty cache we are going to create.
+        
+        # Create a set to hold the dirty keys.
         self.dirty = set()
 
         # Define a callback function to be called by the cache when a
@@ -376,8 +367,7 @@ class WriteBackCacheManager(object):
                 self.store[key] = value
                 self.dirty.remove(key)
                 
-        # Create the cache object. This cache will be used to (hopefully)
-        # speed up access to self.store. Set the callback function.
+        # Create a cache and give it the callback function.
         self.cache = lrucache(size, callback)
 
     # Returns/sets the size of the managed cache.
@@ -390,7 +380,6 @@ class WriteBackCacheManager(object):
         self.store.clear()
         
     def __contains__(self, key):
-        # XXX Should this bring the key/value into the cache?
         # Check the cache first, since if it is there we can return quickly.
         if key in self.cache:
             return True
@@ -488,6 +477,18 @@ class WriteBackCacheManager(object):
         self.sync()
         return False
 
+
+
+
+
+def lruwrap(store, size, writeback=False):
+    if writeback:
+        return WriteBackCacheManager(store, size)
+    else:
+        return WriteThroughCacheManager(store, size)
+         
+         
+         
 
 class lrudecorator(object):
     def __init__(self, size):
