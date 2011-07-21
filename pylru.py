@@ -278,41 +278,19 @@ class lrucache(object):
             node = node.next
 
 
-# The lruwrap class
+def lruwrap(store, size, writeback=False):
+    if not writeback:
+        cache = lrucache(size)
+        return WriteThroughCacheManager(store, cache)
+    else:
+         return WriteBackCacheManager(store, size)
 
-class lruwrap(object):
-    def __init__(self, store, size, writeback=False):
+class WriteThroughCacheManager(object):
+    def __init__(self, store, cache):
         self.store = store
-        self.writeback = writeback
-
-        if not self.writeback:
-            # Create a cache object. This cache will be used to (hopefully)
-            # speed up access to self.store.
-            self.cache = lrucache(size)
-        else:
-            # Create a set to hold the dirty keys. Initially empty to match the
-            # empty cache we are going to create.
-            self.dirty = set()
-
-            # Define a callback function to be called by the cache when a
-            # key/value pair is about to be ejected. This callback will check to
-            # see if the key is in the dirty set. If so, then it will update
-            # the store object and remove the key from the dirty set.
-            def callback(key, value):
-                if key in self.dirty:
-                    self.store[key] = value
-                    self.dirty.remove(key)
-                    
-            # Create the cache object. This cache will be used to (hopefully)
-            # speed up access to self.store. Set the callback function.
-            self.cache = lrucache(size, callback)
+        self.cache = cache
 
     def __len__(self):
-        # XXX Need a way to efficiently return len() when writeback is turned
-        # on. If you really need the length you can call sync() then call
-        # len(self.store), but syncing all of the time kind of defeats the
-        # purpose of a writeback cache.
-        assert self.writeback == False
         return len(self.store)
 
     # Returns/sets the size of the managed cache.
@@ -322,9 +300,95 @@ class lruwrap(object):
     def clear(self):
         self.cache.clear()
         self.store.clear()
-        if self.writeback:
-            self.dirty.clear()
 
+    def __contains__(self, key):
+        # XXX Should this bring the key/value into the cache?
+        # Check the cache first, since if it is there we can return quickly.
+        if key in self.cache:
+            return True
+
+        # Not in the cache. Might be in the underlying store.
+        if key in self.store:
+            return True
+
+        return False
+
+    def __getitem__(self, key):
+        # First we try the cache. If successful we just return the value. If not
+        # we catch KeyError and ignore it since that just means the key was not
+        # in the cache.
+        try:
+            return self.cache[key]
+        except KeyError:
+            pass
+
+        # It wasn't in the cache. Look it up in the store, add the entry to the
+        # cache, and return the value.
+        value = self.store[key]
+        self.cache[key] = value
+        return value
+
+    def __setitem__(self, key, value):
+        # Add the key/value pair to the cache and store.
+        self.cache[key] = value
+        self.store[key] = value
+
+    def __delitem__(self, key):
+        # Write-through behavior cache and store should be consistent.
+        # Delete it from the store.
+        del self.store[key]
+        try:
+            # Ok, delete from the store was successful. It might also be in
+            # the cache, try and delete it. If not we catch the KeyError and
+            # ignore it.
+            del self.cache[key]
+        except KeyError:
+            pass
+
+    def __iter__(self):
+        return self.keys()
+
+    def keys(self):
+        return self.store.keys()
+
+    def values(self):
+        return self.store.values()
+
+    def items(self):
+        return self.store.items()
+        
+        
+
+class WriteBackCacheManager(object):
+    def __init__(self, store, size):
+        self.store = store
+
+        # Create a set to hold the dirty keys. Initially empty to match the
+        # empty cache we are going to create.
+        self.dirty = set()
+
+        # Define a callback function to be called by the cache when a
+        # key/value pair is about to be ejected. This callback will check to
+        # see if the key is in the dirty set. If so, then it will update
+        # the store object and remove the key from the dirty set.
+        def callback(key, value):
+            if key in self.dirty:
+                self.store[key] = value
+                self.dirty.remove(key)
+                
+        # Create the cache object. This cache will be used to (hopefully)
+        # speed up access to self.store. Set the callback function.
+        self.cache = lrucache(size, callback)
+
+    # Returns/sets the size of the managed cache.
+    def size(self, size=None):
+        return self.cache.size(size)
+
+    def clear(self):
+        self.cache.clear()
+        self.dirty.clear()
+        self.store.clear()
+        
     def __contains__(self, key):
         # XXX Should this bring the key/value into the cache?
         # Check the cache first, since if it is there we can return quickly.
@@ -355,96 +419,63 @@ class lruwrap(object):
     def __setitem__(self, key, value):
         # Add the key/value pair to the cache.
         self.cache[key] = value
-
-        # If writeback is turned on then we just mark the key as dirty. That way
-        # when the key/value pair is ejected from the cache it will be written
-        # back to the store by the callback.
-        #
-        # If writeback is off (i.e. write-through is on) we go ahead and update
-        # the store as well.
-        if self.writeback:
-            self.dirty.add(key)
-        else:
-            self.store[key] = value
-
+        self.dirty.add(key)
+        
     def __delitem__(self, key):
-        if self.writeback:
-            found = False
-            try:
-                del self.cache[key]
-                found = True
-                self.dirty.remove(key)
-            except KeyError:
-                pass
+        
+        found = False
+        try:
+            del self.cache[key]
+            found = True
+            self.dirty.remove(key)
+        except KeyError:
+            pass
 
-            try:
-                del self.store[key]
-                found = True
-            except KeyError:
-                pass
-
-            if not found:  # If not found in cache or store, raise error.
-                raise KeyError
-
-        else:
-            # Write-through behavior cache and store should be consistent.
-            # Delete it from the store.
+        try:
             del self.store[key]
-            try:
-                # Ok, delete from the store was successful. It might also be in
-                # the cache, try and delete it. If not we catch the KeyError and
-                # ignore it.
-                del self.cache[key]
-            except KeyError:
-                pass
+            found = True
+        except KeyError:
+            pass
 
+        if not found:  # If not found in cache or store, raise error.
+            raise KeyError
+
+        
     def __iter__(self):
         return self.keys()
 
     def keys(self):
-        if self.writeback:
-            for key in self.store.keys():
-                if key not in self.dirty:
-                    yield key
-                
-            for key in self.dirty:
+        for key in self.store.keys():
+            if key not in self.dirty:
                 yield key
-        else:
-            for key in self.store.keys():
-                yield key
+            
+        for key in self.dirty:
+            yield key
+
 
     def values(self):
-        if self.writeback:
-            for key, value in self.items():
-                yield value
-        else:
-            for value in self.store.values():
-                yield value
+        for key, value in self.items():
+            yield value
+
 
     def items(self):
-        if self.writeback:
-            for key, value in self.store.items():
-                if key not in self.dirty:
-                    yield (key, value)
-                
-            for key in self.dirty:
-                value = self.cache.peek(key)
+        for key, value in self.store.items():
+            if key not in self.dirty:
                 yield (key, value)
-        else:
-            for item in self.store.items():
-                yield item
+            
+        for key in self.dirty:
+            value = self.cache.peek(key)
+            yield (key, value)
+
 
 
     def sync(self):
-        # A cache with write-through behavior is always in sync with the
-        # underlying store so we only need to work if write-back is on.
-        if self.writeback:
-            # For each dirty key, peek at its value in the cache and update the
-            # store. Doesn't change the cache's order.
-            for key in self.dirty:
-                self.store[key] = self.cache.peek(key)
-            # There are no dirty keys now.
-            self.dirty.clear()
+        # For each dirty key, peek at its value in the cache and update the
+        # store. Doesn't change the cache's order.
+        for key in self.dirty:
+            self.store[key] = self.cache.peek(key)
+        # There are no dirty keys now.
+        self.dirty.clear()
 
     def flush(self):
         self.sync()
