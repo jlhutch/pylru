@@ -118,40 +118,76 @@ def testcache():
 
 def wraptest():
 
-    def verify(p, q):
-        assert p == q
+    def verify(p, x):
+        assert p == x.store
+        for key, value in x.cache.items():
+            assert x.store[key] == value
+            
+        tmp = list(x.items())
+        tmp.sort()
+        
+        tmp2 = list(p.items())
+        tmp2.sort()
+        
+        assert tmp == tmp2
 
     p = dict()
     q = dict()
     x = lruwrap(q, 128)
 
-    test(p, x, p, q, verify)
+    test(p, x, p, x, verify)
 
 
 
 def wraptest2():
 
-    def verify(x, y):
-        pass
+    def verify(p, x):
+        for key, value in x.store.items():
+            if key not in x.dirty:
+                assert p[key] == value
+                
+        for key in x.dirty:
+            assert x.cache.peek(key) == p[key]
+            
+        for key, value in x.cache.items():
+            if key not in x.dirty:
+                assert x.store[key] == p[key] == value
+                
+        tmp = list(x.items())
+        tmp.sort()
+        
+        tmp2 = list(p.items())
+        tmp2.sort()
+        
+        assert tmp == tmp2
 
     p = dict()
     q = dict()
     x = lruwrap(q, 128, True)
 
-    test(p, x, None, None, verify)
+    test(p, x, p, x, verify)
 
     x.sync()
     assert p == q
 
 def wraptest3():
 
-    def verify(x, y):
-        pass
+    def verify(p, x):
+        for key, value in x.store.items():
+            if key not in x.dirty:
+                assert p[key] == value
+                
+        for key in x.dirty:
+            assert x.cache.peek(key) == p[key]
+            
+        for key, value in x.cache.items():
+            if key not in x.dirty:
+                assert x.store[key] == p[key] == value
 
     p = dict()
     q = dict()
     with lruwrap(q, 128, True) as x:
-        test(p, x, None, None, verify)
+        test(p, x, p, x, verify)
 
     assert p == q
 
