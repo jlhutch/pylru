@@ -10,22 +10,20 @@ Introduction
 
 Pylru implements a true LRU cache along with several support classes. The cache is efficient and written in pure Python. It works with Python 2.6+ including the new 3.x series. Basic operations (lookup, insert, delete) all run in a constant amount of time.
 
-You can install pylru, or you can just copy the source file pylru.py and use it in your own project.
-
+You can install pylru or you can just copy the source file pylru.py and use it in your own project.
 
 Usage
 =====
 
-
 lrucache
 --------
 
-An LRU cache object has a dictionary like interface and can be used in the same way::
+An lrucache object has a dictionary like interface and can be used in the same way::
 
     import pylru
 
-    size = 100          # Maximum number of key/value pairs you want the cache
-                        # to hold.
+    size = 100          # Size of the cache. The maximum number of key/value
+                        # pairs you want the cache to hold.
     
     cache = pylru.lrucache(size)
                         # Create a cache object.
@@ -55,9 +53,9 @@ An LRU cache object has a dictionary like interface and can be used in the same 
                         # in the order of most recently used to least recently
                         # used.
                         #
-                        # WARNING - While these iterators do not effect the
+                        # WARNING - While these iterators do not affect the
                         # cache order the lookup, insert, and delete operations
-                        # do. The results of changing the cache's order
+                        # do. The result of changing the cache's order
                         # during iteration is undefined. If you really need to
                         # do something of the sort use list(cache.keys()), then
                         # loop over the list elements.
@@ -76,7 +74,7 @@ An LRU cache object has a dictionary like interface and can be used in the same 
     cache.clear()       # Remove all items from the cache.
 
 
-The lrucache takes an optional callback function as a second argument. Since the cache has a fixed size, some operations (such as an insertion) may cause a key/value pair to be ejected. If the optional callback function is given it will be called when this occurs. For example::
+Lrucache takes an optional callback function as a second argument. Since the cache has a fixed size, some operations (such as an insertion) may cause the least recently used key/value pair to be ejected. If the optional callback function is given it will be called when this occurs. For example::
 
     import pylru
 
@@ -93,21 +91,21 @@ The lrucache takes an optional callback function as a second argument. Since the
 WriteThroughCacheManager
 ========================
 
-By default lruwrap uses write-through semantics. For instance, in the above example insertions are updated in the cache and written through to slowDict immediately. The cache and the underlying object are not allowed to get out of sync. So only lookup performance can be improved by the cache.
+Often a cache is used to speed up access to some other high latency object. For example, imagine you have a backend storage object that reads/writes from/to a remote server. Let us call this object *store*. If store has a dictionary interface a cache manager class can be used to compose the store object and an lrucache. The manager object exposes a dictionary interface. The programmer can then interact with the manager object as if it were the store. The manager object takes care of communicating with the store and cacheing key/value pair in the lrucache object.
 
+Two different semantics are supported, write-through (WriteThroughCacheManager class) and write-back (WriteBackCacheManager class). With write-through, lookups from the store are cached for future lookups, but insertion and deletions are updated in the cache and written through to the store immediately. Write-back works the same way, but insertion are updated only in the cache. These "dirty" key/value pair will only be update to the underlying store when they are ejected from the cache or when a sync is performed. The WriteBackCacheManager class is discussed more below. 
 
-Often a cache is used to speed up access to some other high latency object. If that object has a dictionary interface a convenience wrapper class provided by PyLRU can be used. This class takes as an argument the object you want to wrap and the cache size. It then creates an LRU cache for the object and automatically manages it. For example, imagine you have a backend storage object with a dictionary interface that reads/writes its values to and from a remote server. Let us call this object *store*::
+The WriteThroughCacheManager class takes as arguments the store object you want to compose and the cache size. It then creates an LRU cache and automatically manages it::
 
     import pylru
 
     size = 100
+    cached = pylru.WriteThroughCacheManager(store, size)
     cached = pylru.lruwrap(store, size)
+                        # This is a factory function that does the same thing.
 
-    # Now the object *cached* can be used just like *store*, except all of the
-    # basic operations (lookup, insert, delete) are automatically cached for
-    # you using an LRU cache.
-    
-    # Lookup may be faster.
+    # Now the object *cached* can be used just like *store*, except cacheing is
+    # automatically handled.
     
     value = cached[key] # Lookup a value given its key.
     cached[key] = value # Insert a key/value pair.
@@ -137,23 +135,17 @@ Often a cache is used to speed up access to some other high latency object. If t
 WriteBackCacheManager
 =====================
 
-lruwrap takes an optional third argument. If set to True write-back semantics will be used. Insertions will be updated to the cache. The underlying slowDict will automatically be updated only when a "dirty" key/value pair is ejected from the cache.
-
-If write-back is used the programmer is responsible for one more thing. They MUST call sync() when they are finished. This ensures that the last of the "dirty" entries in the cache are written back::
+Similar to the WriteThroughCacheManager class except write-back semantics are used to manage the cache. The programmer is responsible for one more thing as well. They MUST call sync() when they are finished. This ensures that the last of the "dirty" entries in the cache are written back. This is not too bad as WriteBackCacheManager objects can be used in with statements. More about that below::
 
 
     import pylru
 
     size = 100
-    cacheDict = pylru.lruwrap(slowDict, size, True)
+    cached = WriteBackCacheManager(store, size)
+    cached = pylru.lruwrap(store, size, True)
+                        # This is a factory function that does the same thing.
 
-    # Now cacheDict can be used just like slowDict, except all of the lookups
-    # are automatically cached for you using an LRU cache with Write-Back
-    # semantics.
-
-    # DON'T forget to call sync() when finished
-    cacheDict.sync()
-    
+                        
     cached.keys()       # Return an iterator over the keys in the cache/store
     cached.values()     # Return an iterator over the values in the cache/store
     cached.items()      # Return an iterator over the (key, value) pairs in the
@@ -173,8 +165,8 @@ If write-back is used the programmer is responsible for one more thing. They MUS
                         # cache order the lookup, insert, and delete operations
                         # do. The results of changing the cache's order
                         # during iteration is undefined. If you really need to
-                        # do something of the sort use list(cache.keys()), then
-                        # loop over the list elements.
+                        # do something of the sort use list(cached.keys()),
+                        # then loop over the list elements.
                         
     for key in cached:  # Same as cached.keys()
 
@@ -186,18 +178,20 @@ If write-back is used the programmer is responsible for one more thing. They MUS
     
     cached.sync()       # Make the store and cache consistant. Write all
                         # cached changes to the store that have not been
-                        # updated yet.
+                        # yet.
                         
-    cached.flush()      # Calls cached.sync() then clears the cache.
+    cached.flush()      # Calls sync() then clears the cache.
     
 
-To help the programmer with this the lruwrap can be used in a with statement::
+To help the programmer ensure that the final sync() is called, WriteBackCacheManager objects can be used in a with statement::
 
-    with pylru.lruwrap(slowDict, size, True) as cacheDict
+    with pylru.lruwrap(store, size, True) as cached:
+        # Use cached just like you would store. sync() is called automatically
+        # called for you when leaving the with statement block.
 
-        # Use cacheDict, sync() is called automatically for you when leaving the
-        # with statement block.
 
+lrudecorator
+============
 
 PyLRU also provides a function decorator::
 
