@@ -92,7 +92,7 @@ Lrucache takes an optional callback function as a second argument. Since the cac
     # know.
 
 WriteThroughCacheManager
-========================
+------------------------
 
 Often a cache is used to speed up access to some other high latency object. For example, imagine you have a backend storage object that reads/writes from/to a remote server. Let us call this object *store*. If store has a dictionary interface a cache manager class can be used to compose the store object and an lrucache. The manager object exposes a dictionary interface. The programmer can then interact with the manager object as if it were the store. The manager object takes care of communicating with the store and caching key/value pairs in the lrucache object.
 
@@ -138,7 +138,7 @@ The WriteThroughCacheManager class takes as arguments the store object you want 
 
 
 WriteBackCacheManager
-=====================
+---------------------
 
 Similar to the WriteThroughCacheManager class except write-back semantics are used to manage the cache. The programmer is responsible for one more thing as well. They MUST call sync() when they are finished. This ensures that the last of the "dirty" entries in the cache are written back. This is not too bad as WriteBackCacheManager objects can be used in with statements. More about that below::
 
@@ -204,7 +204,7 @@ To help the programmer ensure that the final sync() is called, WriteBackCacheMan
 
 
 lrudecorator
-============
+------------
 
 PyLRU also provides a function decorator::
 
