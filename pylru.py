@@ -43,7 +43,8 @@ class lrucache(object):
     def __init__(self, size, callback=None):
 
         self.callback = callback
-        # Initialize the hash table as empty.
+
+        # Create an empty hash table.
         self.table = {}
 
         # Initialize the doubly linked list with one empty node. This is an
@@ -233,7 +234,7 @@ class lrucache(object):
     # Decreases the size of the list by removing n nodes from the tail of the
     # list.
     def removeTailNode(self, n):
-        assert self.listSize > 1   # Invarient. XXX REMOVE this line XXX
+        assert self.listSize > n
         for i in range(n):
             node = self.head.prev
             if not node.empty:
