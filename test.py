@@ -59,6 +59,12 @@ class simplelrucache:
 
         raise KeyError
 
+    def resize(self, x=None):
+        assert x > 0
+        self.size = x
+        if x < len(self.cache):
+            del self.cache[:len(self.cache) - x]
+
 
 def test(a, b, c, d, verify):
 
@@ -112,7 +118,22 @@ def testcache():
 
     a = lrucache(128)
     b = simplelrucache(128)
+    verify(a, b)
+    test(a, b, a, b, verify)
 
+    a.size(71)
+    b.resize(71)
+    verify(a, b)
+    test(a, b, a, b, verify)
+
+    a.size(341)
+    b.resize(341)
+    verify(a, b)
+    test(a, b, a, b, verify)
+
+    a.size(127)
+    b.resize(127)
+    verify(a, b)
     test(a, b, a, b, verify)
 
 
