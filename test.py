@@ -122,13 +122,13 @@ def wraptest():
         assert p == x.store
         for key, value in x.cache.items():
             assert x.store[key] == value
-            
+
         tmp = list(x.items())
         tmp.sort()
-        
+
         tmp2 = list(p.items())
         tmp2.sort()
-        
+
         assert tmp == tmp2
 
     p = dict()
@@ -145,20 +145,20 @@ def wraptest2():
         for key, value in x.store.items():
             if key not in x.dirty:
                 assert p[key] == value
-                
+
         for key in x.dirty:
             assert x.cache.peek(key) == p[key]
-            
+
         for key, value in x.cache.items():
             if key not in x.dirty:
                 assert x.store[key] == p[key] == value
-                
+
         tmp = list(x.items())
         tmp.sort()
-        
+
         tmp2 = list(p.items())
         tmp2.sort()
-        
+
         assert tmp == tmp2
 
     p = dict()
@@ -176,10 +176,10 @@ def wraptest3():
         for key, value in x.store.items():
             if key not in x.dirty:
                 assert p[key] == value
-                
+
         for key in x.dirty:
             assert x.cache.peek(key) == p[key]
-            
+
         for key, value in x.cache.items():
             if key not in x.dirty:
                 assert x.store[key] == p[key] == value
