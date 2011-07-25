@@ -36,8 +36,6 @@ An lrucache object has a dictionary like interface and can be used in the same w
                         # Lookup and insert both move the key/value to the most
                         # recently used position. Delete (obviously) removes a
                         # key/value from whatever position it was in.
-                        #
-                        # WARNING - keys can't be None
                         
     key in cache        # Test for membership. Does not affect the cache order.
     
@@ -113,8 +111,6 @@ The WriteThroughCacheManager class takes as arguments the store object you want 
     value = cached[key] # Lookup a value given its key.
     cached[key] = value # Insert a key/value pair.
     del cached[key]     # Delete a value given its key.
-                        #
-                        # WARNING - keys can't be None
     
     key in cache        # Test for membership. Does not affect the cache order.
 
@@ -153,8 +149,6 @@ Similar to the WriteThroughCacheManager class except write-back semantics are us
     value = cached[key] # Lookup a value given its key.
     cached[key] = value # Insert a key/value pair.
     del cached[key]     # Delete a value given its key.
-                        #
-                        # WARNING - keys can't be None
     
     key in cache        # Test for membership. Does not affect the cache order.
 

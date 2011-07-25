@@ -34,12 +34,12 @@ class simplelrucache:
         raise KeyError
 
 
-    def __setitem__(self, key, obj):
+    def __setitem__(self, key, value):
 
         for i in range(len(self.cache)):
             x = self.cache[i]
             if x[0] == key:
-                x[1] = obj
+                x[1] = value
                 del self.cache[i]
                 self.cache.append(x)
                 return
@@ -47,7 +47,7 @@ class simplelrucache:
         if len(self.cache) == self.size:
             self.cache = self.cache[1:]
 
-        self.cache.append([key, obj])
+        self.cache.append([key, value])
 
 
     def __delitem__(self, key):
@@ -96,7 +96,7 @@ def testcache():
         q = []
         z = a.head
         for j in range(len(a.table)):
-            q.append([z.key, z.obj])
+            q.append([z.key, z.value])
             z = z.next
 
         assert q == b.cache[::-1]

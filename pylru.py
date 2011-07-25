@@ -20,26 +20,21 @@
 
 
 
-# The cache is implemented using a combination of a hash table (python
-# dictionary) and a circular doubly linked list. Objects in the cache are
+# The cache is implemented using a combination of a python
+# dictionary (hash table) and a circular doubly linked list. Items in the cache are
 # stored in nodes. These nodes make up the linked list. The list is used to
-# efficiently maintain the order that the objects have been used in. The front
-# or "head" of the list contains the most recently used object, the "tail" of
-# the list contains the least recently used object. When an object is "used" it
+# efficiently maintain the order that the items have been used in. The front
+# or head of the list contains the most recently used item, the tail of
+# the list contains the least recently used item. When an item is used it
 # can easily (in a constant amount of time) be moved to the front of the list,
 # thus updating its position in the ordering. These nodes are also placed in
 # the hash table under their associated key. The hash table allows efficient
-# lookup of objects by key.
+# lookup of values by key.
 
-# The doubly linked list is composed of nodes. Each
-# node has a 'prev' and 'next' variable to hold the node that comes before
-# it and after it respectivly. Initially the two variables each point to
-# the node itself, creating a circular doubly linked list of size one. Each
-# node has a 'obj' and 'key' variable, holding the object and the key it is
-# stored under respectivly.
+# Class for the node objects.
 class _dlnode(object):
     def __init__(self):
-        self.key = None
+        self.empty = True
 
 
 class lrucache(object):
@@ -50,10 +45,14 @@ class lrucache(object):
         # Initialize the hash table as empty.
         self.table = {}
 
-
-        # Initalize the list with one empty node. Create a node and
-        # assign it to the 'head' variable, which represents the head node in
-        # the list.
+        # Initialize the doubly linked list with one empty node. This is an
+        # invariant. The cache size must always be greater than zero.
+        # Each
+        # node has a 'prev' and 'next' variable to hold the node that comes before
+        # it and after it respectivly. Initially the two variables each point to
+        # the head node itself, creating a circular doubly linked list of size one.
+        # Then the size() method is used to adjust the list to the desired size.
+        
         self.head = _dlnode()
         self.head.next = self.head
         self.head.prev = self.head
@@ -69,8 +68,9 @@ class lrucache(object):
 
     def clear(self):
         for node in self.dli():
+            node.empty = True
             node.key = None
-            node.obj = None
+            node.value = None
 
         self.table.clear()
 
@@ -82,7 +82,7 @@ class lrucache(object):
     def peek(self, key):
         # Look up the node
         node = self.table[key]
-        return node.obj
+        return node.value
 
 
     def __getitem__(self, key):
@@ -95,20 +95,20 @@ class lrucache(object):
         self.mtf(node)
         self.head = node
 
-        # Return the object
-        return node.obj
+        # Return the value.
+        return node.value
 
 
-    def __setitem__(self, key, obj):
-        # First, see if any object is stored under 'key' in the cache already.
-        # If so we are going to replace that object with the new one.
+    def __setitem__(self, key, value):
+        # First, see if any value is stored under 'key' in the cache already.
+        # If so we are going to replace that value with the new one.
         if key in self.table:
 
             # Lookup the node
             node = self.table[key]
 
-            # Replace the object
-            node.obj = obj
+            # Replace the value.
+            node.value = value
 
             # Update the list ordering.
             self.mtf(node)
@@ -116,10 +116,10 @@ class lrucache(object):
 
             return
 
-        # Ok, no object is currently stored under 'key' in the cache. We need to
-        # choose a node to place the object 'obj' in. There are two cases. If the
-        # cache is full some object will have to be pushed out of the cache. We
-        # want to choose the node with the least recently used object. This is the
+        # Ok, no value is currently stored under 'key' in the cache. We need to
+        # choose a node to place the new item in. There are two cases. If the
+        # cache is full some item will have to be pushed out of the cache. We
+        # want to choose the node with the least recently used item. This is the
         # node at the tail of the list. If the cache is not full we want to choose
         # a node that is empty. Because of the way the list is managed, the empty
         # nodes are always together at the tail end of the list. Thus, in either
@@ -132,14 +132,15 @@ class lrucache(object):
 
         # If the node already contains something we need to remove the old key from
         # the dictionary.
-        if node.key is not None:
+        if not node.empty:
             if self.callback is not None:
-                self.callback(node.key, node.obj)
+                self.callback(node.key, node.value)
             del self.table[node.key]
 
-        # Place the new key and object in the node
+        # Place the new key and value in the node
+        node.empty = False
         node.key = key
-        node.obj = obj
+        node.value = value
 
         # Add the node to the dictionary under the new key.
         self.table[key] = node
@@ -157,11 +158,11 @@ class lrucache(object):
         node = self.table[key]
         del self.table[key]
 
-        # Set the 'key' to None to indicate that the node is empty. We also set the
-        # 'obj' to None to release the reference to the object, though it is not
-        # strictly necessary.
+        node.empty = True
+        
+        # Not strictly necessary.
         node.key = None
-        node.obj = None
+        node.value = None
 
         # Because this node is now empty we want to reuse it before any non-empty
         # node. To do that we want to move it to the tail of the list. We move it
@@ -185,7 +186,7 @@ class lrucache(object):
         # in order from the most recently to least recently used. Does not
         # modify the cache order.
         for node in self.dli():
-            yield (node.key, node.obj)
+            yield (node.key, node.value)
 
     def keys(self):
 
@@ -201,7 +202,7 @@ class lrucache(object):
         # the most recently to least recently used. Does not modify the cache
         # order.
         for node in self.dli():
-            yield node.obj
+            yield node.value
 
     def size(self, size=None):
 
@@ -233,9 +234,9 @@ class lrucache(object):
         assert self.listSize > 1   # Invarient. XXX REMOVE this line XXX
         for i in range(n):
             node = self.head.prev
-            if node.key is not None:
+            if not node.empty:
                 if self.callback is not None:
-                    self.callback(node.key, node.obj)
+                    self.callback(node.key, node.value)
                 del self.table[node.key]
 
             # Splice the tail node out of the list
@@ -247,7 +248,7 @@ class lrucache(object):
             node.next = None
 
             node.key = None
-            node.obj = None
+            node.value = None
 
         self.listSize -= n
 
