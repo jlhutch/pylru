@@ -112,7 +112,7 @@ def testcache():
             q2.append((x, y))
 
         assert list(a.items()) == q2
-        assert zip(a.keys(), a.values()) == q2
+        assert list(zip(a.keys(), a.values())) == q2
         assert list(a.keys()) == list(a)
 
 
