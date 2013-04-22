@@ -160,6 +160,9 @@ class lrucache(object):
         node = self.table[key]
         del self.table[key]
 
+        if self.callback is not None and not node.empty:
+            self.callback(node.key, node.value)
+
         node.empty = True
 
         # Not strictly necessary.
