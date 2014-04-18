@@ -1,5 +1,4 @@
 
-
 # Cache implementaion with a Least Recently Used (LRU) replacement policy and
 # a basic dictionary interface.
 
@@ -100,6 +99,10 @@ class lrucache(object):
         # Return the value.
         return node.value
 
+    def get(self, key, default=None):
+        """Get an item - return default (None) if not present"""
+        try: return self[key]
+        except KeyError: return default
 
     def __setitem__(self, key, value):
         # First, see if any value is stored under 'key' in the cache already.
