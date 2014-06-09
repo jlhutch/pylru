@@ -223,6 +223,16 @@ def testDecorator():
         assert square(x) == x*x
 
 
+@lrudecorator(25)
+def multiple(a, b):
+    return a*b
+
+def testDecoratorWithKwargs():
+    a = 10
+    for i in range(1000):
+        b = random.randint(0, 1493)
+        assert multiple(a, b=b) == a*b
+
 if __name__ == '__main__':
 
     random.seed()

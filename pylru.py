@@ -502,13 +502,15 @@ class lrudecorator(object):
         self.cache = lrucache(size)
 
     def __call__(self, func):
-        def wrapped(*args):  # XXX What about kwargs
+        def wrapped(*args, **kwargs):
+            dispatch_uid = (hash(args),
+                            hash(tuple(sorted(kwargs.items()))))
             try:
-                return self.cache[args]
+                return self.cache[dispatch_uid]
             except KeyError:
                 pass
 
-            value = func(*args)
-            self.cache[args] = value
+            value = func(*args, **kwargs)
+            self.cache[dispatch_uid] = value
             return value
         return wrapped
