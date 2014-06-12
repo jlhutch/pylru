@@ -101,8 +101,10 @@ class lrucache(object):
 
     def get(self, key, default=None):
         """Get an item - return default (None) if not present"""
-        try: return self[key]
-        except KeyError: return default
+        try:
+            return self[key]
+        except KeyError:
+            return default
 
     def __setitem__(self, key, value):
         # First, see if any value is stored under 'key' in the cache already.
@@ -327,6 +329,13 @@ class WriteThroughCacheManager(object):
         self.cache[key] = value
         return value
 
+    def get(self, key, default=None):
+        """Get an item - return default (None) if not present"""
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
     def __setitem__(self, key, value):
         # Add the key/value pair to the cache and store.
         self.cache[key] = value
@@ -411,6 +420,13 @@ class WriteBackCacheManager(object):
         value = self.store[key]
         self.cache[key] = value
         return value
+
+    def get(self, key, default=None):
+        """Get an item - return default (None) if not present"""
+        try:
+            return self[key]
+        except KeyError:
+            return default
 
     def __setitem__(self, key, value):
         # Add the key/value pair to the cache.
@@ -502,13 +518,15 @@ class lrudecorator(object):
         self.cache = lrucache(size)
 
     def __call__(self, func):
-        def wrapped(*args):  # XXX What about kwargs
+        def wrapped(*args, **kwargs):
+            kwtuple = tuple((key, kwargs[key]) for key in sorted(kwargs.keys()))
+            key = (args, kwtuple)
             try:
-                return self.cache[args]
+                return self.cache[key]
             except KeyError:
                 pass
 
-            value = func(*args)
-            self.cache[args] = value
+            value = func(*args, **kwargs)
+            self.cache[key] = value
             return value
         return wrapped

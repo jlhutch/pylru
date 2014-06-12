@@ -213,13 +213,13 @@ def wraptest3():
     assert p == q
 
 
-@lrudecorator(25)
+@lrudecorator(100)
 def square(x):
     return x*x
 
 def testDecorator():
     for i in range(1000):
-        x = random.randint(0, 1493)
+        x = random.randint(0, 200)
         assert square(x) == x*x
 
 
