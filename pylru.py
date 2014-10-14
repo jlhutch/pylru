@@ -49,7 +49,7 @@ class lrucache(object):
         # Initialize the doubly linked list with one empty node. This is an
         # invariant. The cache size must always be greater than zero. Each
         # node has a 'prev' and 'next' variable to hold the node that comes
-        # before it and after it respectivly. Initially the two variables
+        # before it and after it respectively. Initially the two variables
         # each point to the head node itself, creating a circular doubly
         # linked list of size one. Then the size() method is used to adjust
         # the list to the desired size.
