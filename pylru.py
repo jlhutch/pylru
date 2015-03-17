@@ -529,4 +529,5 @@ class lrudecorator(object):
             value = func(*args, **kwargs)
             self.cache[key] = value
             return value
+        wrapped.cache = self.cache
         return wrapped

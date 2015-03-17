@@ -209,5 +209,7 @@ PyLRU also provides a function decorator::
         return x*x
 
     # Now results of the square function are cached for future lookup.
+    # You can get full access to cache via square.cache .
+
 
 
