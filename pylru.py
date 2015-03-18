@@ -534,19 +534,7 @@ def lruwrap(store, size, writeback=False):
 
 class lrudecorator(object):
     def __init__(self, size):
-        self.cache = lrucache(size)
+        self.size = size
 
     def __call__(self, func):
-        def wrapped(*args, **kwargs):
-            kwtuple = tuple((key, kwargs[key]) for key in sorted(kwargs.keys()))
-            key = (args, kwtuple)
-            try:
-                return self.cache[key]
-            except KeyError:
-                pass
-
-            value = func(*args, **kwargs)
-            self.cache[key] = value
-            return value
-        wrapped.cache = self.cache
-        return wrapped
+        return FunctionCacheManager(func, self.size)
