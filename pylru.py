@@ -501,7 +501,22 @@ class WriteBackCacheManager(object):
         return False
 
 
+class FunctionCacheManager(object):
+    def __init__(self, func, size):
+        self.func = func
+        self.cache = lrucache(size)
 
+    def __call__(self, *args, **kwargs):
+        kwtuple = tuple((key, kwargs[key]) for key in sorted(kwargs.keys()))
+        key = (args, kwtuple)
+        try:
+            return self.cache[key]
+        except KeyError:
+            pass
+
+        value = self.func(*args, **kwargs)
+        self.cache[key] = value
+        return value
 
 
 def lruwrap(store, size, writeback=False):
@@ -509,8 +524,6 @@ def lruwrap(store, size, writeback=False):
         return WriteBackCacheManager(store, size)
     else:
         return WriteThroughCacheManager(store, size)
-
-
 
 
 class lrudecorator(object):
