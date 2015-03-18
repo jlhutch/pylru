@@ -506,6 +506,12 @@ class FunctionCacheManager(object):
         self.func = func
         self.cache = lrucache(size)
 
+    def size(self, size=None):
+        return self.cache.size(size)
+
+    def clear(self):
+        self.cache.clear()
+
     def __call__(self, *args, **kwargs):
         kwtuple = tuple((key, kwargs[key]) for key in sorted(kwargs.keys()))
         key = (args, kwtuple)
