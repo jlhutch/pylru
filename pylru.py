@@ -531,10 +531,12 @@ def lruwrap(store, size, writeback=False):
     else:
         return WriteThroughCacheManager(store, size)
 
+import functools
 
 class lrudecorator(object):
     def __init__(self, size):
         self.size = size
 
     def __call__(self, func):
-        return FunctionCacheManager(func, self.size)
+        wrapper = FunctionCacheManager(func, self.size)
+        return functools.update_wrapper(wrapper, func)
