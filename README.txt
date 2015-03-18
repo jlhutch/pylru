@@ -8,9 +8,9 @@ A least recently used (LRU) cache for Python.
 Introduction
 ============
 
-Pylru implements a true LRU cache along with several support classes. The cache is efficient and written in pure Python. It works with Python 2.6+ including the 3.x series. Basic operations (lookup, insert, delete) all run in a constant amount of time.
+Pylru implements a true LRU cache along with several support classes. The cache is efficient and written in pure Python. It works with Python 2.6+ including the 3.x series. Basic operations (lookup, insert, delete) all run in a constant amount of time. Pylru provides a cache class with a simple dict interface. It also provides classes to wrap an object with a dict interface with a cache, resulting in a new object with a dict interface, but now cached. Both write-through and write-back semantics are supported. Pylru also provides classes to wrap functions in a similar way, including a function decorator.
 
-You can install pylru or you can just copy the source file pylru.py and use it in your own project. The rest of this file explains what the pylru module provides and how to use it. If you want to know more examine pylru.py. The code is straightforward and well commented.
+You can install pylru or you can just copy the source file pylru.py and use it directly in your own project. The rest of this file explains what the pylru module provides and how to use it. If you want to know more examine pylru.py. The code is straightforward and well commented.
 
 Usage
 =====
@@ -102,6 +102,7 @@ The WriteThroughCacheManager class takes as arguments the store object you want 
 
     size = 100
     cached = pylru.WriteThroughCacheManager(store, size)
+                        # Or
     cached = pylru.lruwrap(store, size)
                         # This is a factory function that does the same thing.
 
@@ -142,7 +143,8 @@ Similar to the WriteThroughCacheManager class except write-back semantics are us
     import pylru
 
     size = 100
-    cached = WriteBackCacheManager(store, size)
+    cached = pylru.WriteBackCacheManager(store, size)
+                        # Or
     cached = pylru.lruwrap(store, size, True)
                         # This is a factory function that does the same thing.
                         
@@ -192,24 +194,52 @@ Similar to the WriteThroughCacheManager class except write-back semantics are us
 
 To help the programmer ensure that the final sync() is called, WriteBackCacheManager objects can be used in a with statement::
 
-    with pylru.lruwrap(store, size, True) as cached:
+    with pylru.WriteBackCacheManager(store, size) as cached:
         # Use cached just like you would store. sync() is called automatically
         # for you when leaving the with statement block.
+
+
+FunctionCacheManager
+---------------------
+
+FunctionCacheManager allows you to compose a function with an lrucache. The resulting object can be called just like the original function, but the results are cached to speed up future calls. The fuction must have arguments that are hashable::
+
+    import pylru
+
+    def square(x):
+        return x * x
+
+    size = 100
+    cached = pylru.FunctionCacheManager(square, size)
+
+    y = cached(7)
+
+    # The results of cached are the same as square, but automatically cached
+    # to speed up future calls.
+
+    cached.size()       # Returns the size of the cache
+    cached.size(x)      # Changes the size of the cache. x MUST be greater than
+                        # zero. Returns the new size x.
+
+    cached.clear()      # Remove all items from the cache.
+
 
 
 lrudecorator
 ------------
 
-PyLRU also provides a function decorator::
+PyLRU also provides a function decorator. This is basically the same functionality as FunctionCacheManager, but in the form of a decorator::
 
     from pylru import lrudecorator
 
     @lrudecorator(100)
     def square(x):
-        return x*x
+        return x * x
 
-    # Now results of the square function are cached for future lookup.
-    # You can get full access to cache via square.cache .
+    # The results of the square function are cached to speed up future calls.
 
+    square.size()       # Returns the size of the cache
+    square.size(x)      # Changes the size of the cache. x MUST be greater than
+                        # zero. Returns the new size x.
 
-
+    square.clear()      # Remove all items from the cache.
