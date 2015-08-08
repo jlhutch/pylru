@@ -1,0 +1,26 @@
+Source: python-pylru
+Maintainer: Jay Hutchinson <jlhutch@gmail.com>
+Section: python
+Priority: optional
+Build-Depends: debhelper (>= 9),
+ dh-python,
+ python-all, python3-all,
+ python-setuptools, python3-setuptools
+Standards-Version: 3.9.6
+Homepage: https://github.com/jlhutch/pylru
+
+Package: python-pylru
+Architecture: all
+Depends: ${python:Depends},
+ ${misc:Depends}
+Description: A least recently used (LRU) cache for Python
+ .
+ Package only includes python2 bindings.
+
+Package: python3-pylru
+Architecture: all
+Depends: ${python3:Depends},
+ ${misc:Depends}
+Description: A least recently used (LRU) cache for Python
+ .
+ Package only includes python3 bindings.
