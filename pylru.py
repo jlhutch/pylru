@@ -114,6 +114,9 @@ class lrucache(object):
             # Lookup the node
             node = self.table[key]
 
+            if self.callback is not None and not node.empty:
+                self.callback(node.key, node.value)
+
             # Replace the value.
             node.value = value
 
@@ -164,6 +167,9 @@ class lrucache(object):
         # Lookup the node, then remove it from the hash table.
         node = self.table[key]
         del self.table[key]
+
+        if self.callback is not None and not node.empty:
+            self.callback(node.key, node.value)
 
         node.empty = True
 

@@ -222,11 +222,48 @@ def testDecorator():
         x = random.randint(0, 200)
         assert square(x) == x*x
 
+def testCallback():
+    # Tests that the callback is called only when we want it to be
+
+    # Create a callback that tracks number of times it is called
+    def callback(*args):
+        callback.count += 1
+    callback.count = 0
+
+    # Create a small cache we can easily overflow
+    q = lrucache(1, callback=callback)
+
+    # A simple set does not delete anything
+    q['key1'] = 'a'
+    assert callback.count == 0
+
+    # A simple get does not delete anything
+    value = q['key1']
+    assert callback.count == 0
+
+    # Nor peek()
+    value = q.peek('key1')
+    assert callback.count == 0
+
+    # Overwriting a key should remove the old value and invoke the callback
+    q['key1'] = 'a'
+    assert callback.count == 1
+
+    # Adding a new key that overflows the cache should remove a key to make
+    # room and invoke the callback
+    q['key2'] = 'a'
+    assert callback.count == 2
+
+    # Manually deleting a key should invoke the callback
+    del q['key2']
+    assert callback.count == 3
+
 
 if __name__ == '__main__':
 
     random.seed()
 
+    testCallback()
 
     for i in range(20):
         testcache()
@@ -234,5 +271,3 @@ if __name__ == '__main__':
         wraptest2()
         wraptest3()
         testDecorator()
-
-
