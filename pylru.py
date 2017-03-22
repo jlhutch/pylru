@@ -379,9 +379,12 @@ class WriteBackCacheManager(object):
         # see if the key is in the dirty set. If so, then it will update the
         # store object and remove the key from the dirty set.
         def callback(key, value):
-            if key in self.dirty:
-                self.store[key] = value
-                self.dirty.remove(key)
+            if hasattr(self.store, "mset") and len(self.dirty) >= self.store.should_use_mset(len(self.dirty)):
+                self.sync()
+            else:
+                if key in self.dirty:
+                    self.store[key] = value
+                    self.dirty.remove(key)
 
         # Create a cache and give it the callback function.
         self.cache = lrucache(size, callback)
@@ -484,8 +487,11 @@ class WriteBackCacheManager(object):
     def sync(self):
         # For each dirty key, peek at its value in the cache and update the
         # store. Doesn't change the cache's order.
-        for key in self.dirty:
-            self.store[key] = self.cache.peek(key)
+        if hasattr(self.store, "mset") and len(self.dirty) >= self.store.should_use_mset(len(self.dirty)):
+            self.store.mset(((key, self.cache.peek(key)) for key in self.dirty))
+        else:
+            for key in self.dirty:
+                self.store[key] = self.cache.peek(key)
         # There are no dirty keys now.
         self.dirty.clear()
 
