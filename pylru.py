@@ -101,10 +101,10 @@ class lrucache(object):
 
     def get(self, key, default=None):
         """Get an item - return default (None) if not present"""
-        try:
-            return self[key]
-        except KeyError:
+        if key not in self.table:
             return default
+        
+        return self[key]
 
     def __setitem__(self, key, value):
         # First, see if any value is stored under 'key' in the cache already.
