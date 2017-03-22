@@ -1,0 +1,5 @@
+python-pylru (0.0.1) UNRELEASED; urgency=medium
+
+  * First version with Debian packaging.
+
+ -- Adam Roses Wight <adamw@ludd.net>  Fri, 08 Aug 2015 00:55:11 -0700
