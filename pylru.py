@@ -75,6 +75,7 @@ class lrucache(object):
 
         self.table.clear()
 
+
     def __contains__(self, key):
         return key in self.table
 
@@ -83,6 +84,7 @@ class lrucache(object):
         # Look up the node
         node = self.table[key]
         return node.value
+
 
     def __getitem__(self, key):
         # Look up the node
