@@ -75,7 +75,6 @@ class lrucache(object):
 
         self.table.clear()
 
-
     def __contains__(self, key):
         return key in self.table
 
@@ -84,7 +83,6 @@ class lrucache(object):
         # Look up the node
         node = self.table[key]
         return node.value
-
 
     def __getitem__(self, key):
         # Look up the node
@@ -158,6 +156,11 @@ class lrucache(object):
         # need to adjust the 'head' variable.
         self.head = node
 
+    def update(self, items):
+
+        # Add multiple items to the cache.
+        for n, v in items.items():
+            self[n] = v
 
     def __delitem__(self, key):
 
