@@ -158,6 +158,11 @@ class lrucache(object):
         # need to adjust the 'head' variable.
         self.head = node
 
+    def update(self, items):
+
+        # Add multiple items to the cache.
+        for n, v in items.items():
+            self[n] = v
 
     def __delitem__(self, key):
 
