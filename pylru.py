@@ -370,6 +370,10 @@ class WriteBackCacheManager(object):
     def size(self, size=None):
         return self.cache.size(size)
 
+    def len(self):
+        self.sync()
+        return len(self.store)
+
     def clear(self):
         self.cache.clear()
         self.dirty.clear()

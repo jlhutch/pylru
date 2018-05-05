@@ -183,6 +183,13 @@ Similar to the WriteThroughCacheManager class except write-back semantics are us
     cached.size(x)      # Changes the size of the cache. x MUST be greater than
                         # zero. Returns the new size x.
 
+    x = len(cached)     # Returns the number of items stored in the store.
+                        #
+                        # WARNING - This method calls sync() internally. If
+                        # that has adverse performance effects for your
+                        # application, you may want to avoid calling this
+                        # method frequently.
+
     cached.clear()      # Remove all items from the store and cache.
     
     cached.sync()       # Make the store and cache consistent. Write all
