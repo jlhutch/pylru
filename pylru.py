@@ -31,13 +31,17 @@
 # hash table under their associated key. The hash table allows efficient
 # lookup of values by key.
 
+
+import collections
+
+
 # Class for the node objects.
 class _dlnode(object):
     def __init__(self):
         self.empty = True
 
 
-class lrucache(object):
+class lrucache(collections.MutableMapping):
 
     def __init__(self, size, callback=None):
 
@@ -157,12 +161,6 @@ class lrucache(object):
         # being circular. Therefore, the ordering is already correct, we just
         # need to adjust the 'head' variable.
         self.head = node
-
-    def update(self, items):
-
-        # Add multiple items to the cache.
-        for n, v in items.items():
-            self[n] = v
 
     def __delitem__(self, key):
 
