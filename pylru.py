@@ -2,7 +2,7 @@
 # Cache implementaion with a Least Recently Used (LRU) replacement policy and
 # a basic dictionary interface.
 
-# Copyright (C) 2006, 2009, 2010, 2011 Jay Hutchinson
+# Copyright (C) 2006-2018 Jay Hutchinson
 
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -40,7 +40,6 @@ class _dlnode(object):
 class lrucache(object):
 
     def __init__(self, size, callback=None):
-
         self.callback = callback
 
         # Create an empty hash table.
@@ -51,18 +50,15 @@ class lrucache(object):
         # node has a 'prev' and 'next' variable to hold the node that comes
         # before it and after it respectively. Initially the two variables
         # each point to the head node itself, creating a circular doubly
-        # linked list of size one. Then the size() method is used to adjust
-        # the list to the desired size.
-
+        # linked list of size one.
         self.head = _dlnode()
         self.head.next = self.head
         self.head.prev = self.head
 
         self.listSize = 1
 
-        # Adjust the size
+        # Now adjust the list to the desired size.
         self.size(size)
-
 
     def __len__(self):
         return len(self.table)
@@ -75,28 +71,23 @@ class lrucache(object):
 
         self.table.clear()
 
-
     def __contains__(self, key):
         return key in self.table
 
-    # Looks up a value in the cache without affecting cache order.
+    # Looks up a value in the cache without affecting the cache's order.
     def peek(self, key):
-        # Look up the node
         node = self.table[key]
         return node.value
 
-
     def __getitem__(self, key):
-        # Look up the node
         node = self.table[key]
 
-        # Update the list ordering. Move this node so that is directly
+        # Update the list ordering. Move this node so that it directly
         # proceeds the head node. Then set the 'head' variable to it. This
         # makes it the new head of the list.
         self.mtf(node)
         self.head = node
 
-        # Return the value.
         return node.value
 
     def get(self, key, default=None):
@@ -107,11 +98,9 @@ class lrucache(object):
         return self[key]
 
     def __setitem__(self, key, value):
-        # First, see if any value is stored under 'key' in the cache already.
-        # If so we are going to replace that value with the new one.
+        # If any value is stored under 'key' in the cache already, then replace
+        # that value with the new one.
         if key in self.table:
-
-            # Lookup the node
             node = self.table[key]
 
             # Replace the value.
@@ -165,11 +154,9 @@ class lrucache(object):
             self[n] = v
 
     def __delitem__(self, key):
-
-        # Lookup the node, then remove it from the hash table.
+        # Lookup the node, remove it from the hash table, and mark it as empty.
         node = self.table[key]
         del self.table[key]
-
         node.empty = True
 
         # Not strictly necessary.
@@ -186,39 +173,34 @@ class lrucache(object):
         self.head = node.next
 
     def __iter__(self):
-
         # Return an iterator that returns the keys in the cache in order from
-        # the most recently to least recently used. Does not modify the cache
+        # the most recently to least recently used. Does not modify the cache's
         # order.
         for node in self.dli():
             yield node.key
 
     def items(self):
-
         # Return an iterator that returns the (key, value) pairs in the cache
         # in order from the most recently to least recently used. Does not
-        # modify the cache order.
+        # modify the cache's order.
         for node in self.dli():
             yield (node.key, node.value)
 
     def keys(self):
-
         # Return an iterator that returns the keys in the cache in order from
-        # the most recently to least recently used. Does not modify the cache
+        # the most recently to least recently used. Does not modify the cache's
         # order.
         for node in self.dli():
             yield node.key
 
     def values(self):
-
         # Return an iterator that returns the values in the cache in order
         # from the most recently to least recently used. Does not modify the
-        # cache order.
+        # cache's order.
         for node in self.dli():
             yield node.value
 
     def size(self, size=None):
-
         if size is not None:
             assert size > 0
             if size > self.listSize:
@@ -241,7 +223,7 @@ class lrucache(object):
 
         self.listSize += n
 
-    # Decreases the size of the list by removing n nodes from the tail of the
+    # Decreases the size of the cache by removing n nodes from the tail of the
     # list.
     def removeTailNode(self, n):
         assert self.listSize > n
@@ -259,17 +241,15 @@ class lrucache(object):
             # The next four lines are not strictly necessary.
             node.prev = None
             node.next = None
-
             node.key = None
             node.value = None
 
         self.listSize -= n
 
-
     # This method adjusts the ordering of the doubly linked list so that
     # 'node' directly precedes the 'head' node. Because of the order of
-    # operations, if 'node' already directly precedes the 'head' node or if
-    # 'node' is the 'head' node the order of the list will be unchanged.
+    # operations, if 'node' already directly precedes the 'head' node, or if
+    # 'node' is the 'head' node, the order of the list will be unchanged.
     def mtf(self, node):
         node.prev.next = node.next
         node.next.prev = node.prev
@@ -288,7 +268,6 @@ class lrucache(object):
         for i in range(len(self.table)):
             yield node
             node = node.next
-
 
 
 
@@ -347,13 +326,13 @@ class WriteThroughCacheManager(object):
         self.store[key] = value
 
     def __delitem__(self, key):
-        # Write-through behavior cache and store should be consistent. Delete
-        # it from the store.
+        # With write-through behavior the cache and store should be consistent.
+        # Delete it from the store.
         del self.store[key]
+
+        # It might also be in the cache, try to delete it. If it is not, we
+        # will catch KeyError and ignore it.
         try:
-            # Ok, delete from the store was successful. It might also be in
-            # the cache, try and delete it. If not we catch the KeyError and
-            # ignore it.
             del self.cache[key]
         except KeyError:
             pass
@@ -439,7 +418,6 @@ class WriteBackCacheManager(object):
         self.dirty.add(key)
 
     def __delitem__(self, key):
-
         found = False
         try:
             del self.cache[key]
@@ -457,7 +435,6 @@ class WriteBackCacheManager(object):
         if not found:  # If not found in cache or store, raise error.
             raise KeyError
 
-
     def __iter__(self):
         return self.keys()
 
@@ -469,11 +446,9 @@ class WriteBackCacheManager(object):
         for key in self.dirty:
             yield key
 
-
     def values(self):
         for key, value in self.items():
             yield value
-
 
     def items(self):
         for key, value in self.store.items():
@@ -483,8 +458,6 @@ class WriteBackCacheManager(object):
         for key in self.dirty:
             value = self.cache.peek(key)
             yield (key, value)
-
-
 
     def sync(self):
         # For each dirty key, peek at its value in the cache and update the
