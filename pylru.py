@@ -31,6 +31,12 @@
 # hash table under their associated key. The hash table allows efficient
 # lookup of values by key.
 
+import sys
+if sys.version_info < (3, 3):
+    from collections import Mapping
+else:
+    from collections.abc import Mapping
+
 # Class for the node objects.
 class _dlnode(object):
     def __init__(self):
@@ -147,12 +153,6 @@ class lrucache(object):
         # need to adjust the 'head' variable.
         self.head = node
 
-    def update(self, items):
-
-        # Add multiple items to the cache.
-        for n, v in items.items():
-            self[n] = v
-
     def __delitem__(self, key):
         # Lookup the node, remove it from the hash table, and mark it as empty.
         node = self.table[key]
@@ -171,6 +171,22 @@ class lrucache(object):
         # is the 'head' node.
         self.mtf(node)
         self.head = node.next
+
+    def update(self, *args, **kwargs):
+        if len(args) > 0:
+            other = args[0]
+            if isinstance(other, Mapping):
+                for key in other:
+                    self[key] = other[key]
+            elif hasattr(other, "keys"):
+                for key in other.keys():
+                    self[key] = other[key]
+            else:
+                for key, value in other:
+                    self[key] = value
+
+        for key, value in kwargs.items():
+            self[key] = value
 
     def __iter__(self):
         # Return an iterator that returns the keys in the cache in order from
