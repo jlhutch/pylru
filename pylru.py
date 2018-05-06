@@ -188,6 +188,36 @@ class lrucache(object):
         for key, value in kwargs.items():
             self[key] = value
 
+    __defaultObj = object()
+    def pop(self, key, default=__defaultObj):
+        if key in self.table:
+            value = self.peek(key)
+            del self[key]
+            return value
+
+        if default is self.__defaultObj:
+            raise KeyError
+
+        return default
+
+    def popitem(self):
+        # Make sure the cache isn't empty.
+        if len(self) < 1:
+            raise KeyError
+
+        key = self.head.key
+        value = self.head.value
+        del self[key]
+
+        return key, value
+
+    def setdefault(self, key, default=None):
+        if key in self.table:
+            return self[key]
+
+        self[key] = default
+        return default
+
     def __iter__(self):
         # Return an iterator that returns the keys in the cache in order from
         # the most recently to least recently used. Does not modify the cache's
