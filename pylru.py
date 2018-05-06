@@ -299,13 +299,9 @@ class WriteThroughCacheManager(object):
         return False
 
     def __getitem__(self, key):
-        # First we try the cache. If successful we just return the value. If
-        # not we catch KeyError and ignore it since that just means the key
-        # was not in the cache.
-        try:
+        # Try the cache first. If successful we can just return the value.
+        if key in self.cache:
             return self.cache[key]
-        except KeyError:
-            pass
 
         # It wasn't in the cache. Look it up in the store, add the entry to
         # the cache, and return the value.
@@ -391,13 +387,9 @@ class WriteBackCacheManager(object):
         return False
 
     def __getitem__(self, key):
-        # First we try the cache. If successful we just return the value. If
-        # not we catch KeyError and ignore it since that just means the key
-        # was not in the cache.
-        try:
+        # Try the cache first. If successful we can just return the value.
+        if key in self.cache:
             return self.cache[key]
-        except KeyError:
-            pass
 
         # It wasn't in the cache. Look it up in the store, add the entry to
         # the cache, and return the value.
