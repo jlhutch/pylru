@@ -554,8 +554,8 @@ def lruwrap(store, size, writeback=False):
 import functools
 
 class lrudecorator(object):
-    def __init__(self, size):
-        self.cache = lrucache(size)
+    def __init__(self, size, callback=None):
+        self.cache = lrucache(size, callback)
 
     def __call__(self, func):
         def wrapper(*args, **kwargs):
