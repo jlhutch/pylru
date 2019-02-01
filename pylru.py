@@ -39,6 +39,8 @@ else:
 
 # Class for the node objects.
 class _dlnode(object):
+    __slots__ = ('empty', 'next', 'prev', 'key', 'value')
+
     def __init__(self):
         self.empty = True
 
