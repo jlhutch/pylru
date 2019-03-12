@@ -2,7 +2,7 @@
 # Cache implementaion with a Least Recently Used (LRU) replacement policy and
 # a basic dictionary interface.
 
-# Copyright (C) 2006-2018 Jay Hutchinson
+# Copyright (C) 2006-2019 Jay Hutchinson
 
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -524,9 +524,9 @@ class WriteBackCacheManager(object):
 
 
 class FunctionCacheManager(object):
-    def __init__(self, func, size):
+    def __init__(self, func, size, callback=None):
         self.func = func
-        self.cache = lrucache(size)
+        self.cache = lrucache(size, callback)
 
     def size(self, size=None):
         return self.cache.size(size)
