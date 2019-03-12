@@ -209,7 +209,7 @@ To help the programmer ensure that the final sync() is called, WriteBackCacheMan
 FunctionCacheManager
 ---------------------
 
-FunctionCacheManager allows you to compose a function with an lrucache. The resulting object can be called just like the original function, but the results are cached to speed up future calls. The fuction must have arguments that are hashable::
+FunctionCacheManager allows you to compose a function with an lrucache. The resulting object can be called just like the original function, but the results are cached to speed up future calls. The function must have arguments that are hashable. FunctionCacheManager takes an optional callback function as a third argument::
 
     import pylru
 
@@ -235,7 +235,7 @@ FunctionCacheManager allows you to compose a function with an lrucache. The resu
 lrudecorator
 ------------
 
-PyLRU also provides a function decorator. This is basically the same functionality as FunctionCacheManager, but in the form of a decorator::
+PyLRU also provides a function decorator. This is basically the same functionality as FunctionCacheManager, but in the form of a decorator. The decorator takes an optional callback function as a second argument::
 
     from pylru import lrudecorator
 
