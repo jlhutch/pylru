@@ -1,6 +1,6 @@
-from distutils.core import setup
+import setuptools
 
-setup(
+setuptools.setup(
     name = "pylru",
     version = "1.2.0",
     py_modules=['pylru'],
