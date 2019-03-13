@@ -18,6 +18,6 @@ setup(
         "Operating System :: OS Independent",
         "Topic :: Software Development :: Libraries :: Python Modules",
         ],
-    long_description=open('README.md').read())
+    long_description=open('README.rst').read())
 
 
