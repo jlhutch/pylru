@@ -317,6 +317,8 @@ class lrucache(object):
             yield node
             node = node.next
 
+    def __deepcopy__(self, memodict=None):
+        raise NotImplementedError
 
 
 class WriteThroughCacheManager(object):

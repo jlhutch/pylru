@@ -1,5 +1,6 @@
 
 from pylru import *
+import copy
 import random
 
 # This tests PyLRU by fuzzing it with random operations, then checking the
@@ -223,6 +224,19 @@ def testDecorator():
         assert square(x) == x*x
 
 
+def test_deepcopy():
+    cache = lrucache(100)
+    result = False
+    try:
+        copy.deepcopy(cache)
+    except NotImplementedError:
+        result = True
+    except Exception:
+        pass
+
+    assert result is True
+
+
 if __name__ == '__main__':
 
     random.seed()
@@ -234,5 +248,6 @@ if __name__ == '__main__':
         wraptest2()
         wraptest3()
         testDecorator()
+        test_deepcopy()
 
 
