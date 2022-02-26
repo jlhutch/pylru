@@ -317,6 +317,38 @@ class lrucache(object):
             yield node
             node = node.next
 
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['table']
+        del d['head']
+
+        elements = [(node.key, node.value) for node in self.dli()]
+        return (d, elements)
+
+    def __setstate__(self, state):
+        d = state[0]
+        elements = state[1]
+
+        self.__dict__.update(d)
+
+
+        size = self.listSize
+
+        # Create an empty hash table.
+        self.table = {}
+
+        self.head = _dlnode()
+        self.head.next = self.head
+        self.head.prev = self.head
+
+        self.listSize = 1
+
+        # Now adjust the list to the desired size.
+        self.size(size)
+
+
+        for key, value in reversed(elements):
+            self[key] = value
 
 
 class WriteThroughCacheManager(object):
