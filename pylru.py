@@ -205,9 +205,27 @@ class lrucache(object):
         if len(self) < 1:
             raise KeyError
 
-        key = self.head.key
-        value = self.head.value
-        del self[key]
+        # Grab the head node
+        node = self.head
+
+        # Save the key and value so that we can return them.
+        key = node.key
+        value = node.value
+
+        # Remove the key from the hash table and mark the node as empty.
+        del self.table[key]
+        node.empty = True
+
+        # Not strictly necessary.
+        node.key = None
+        node.value = None
+
+        # Because this node is now empty we want to reuse it before any
+        # non-empty node. To do that we want to move it to the tail of the
+        # list. This node is the head node. Due to the list being circular,
+        # the ordering is already correct, we just need to adjust the 'head'
+        # variable.
+        self.head = node.next
 
         return key, value
 
