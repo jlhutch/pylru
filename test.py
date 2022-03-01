@@ -8,22 +8,18 @@ import random
 class simplelrucache:
 
     def __init__(self, size):
-
         # Initialize the cache as empty.
         self.cache = []
         self.size = size
 
     def __contains__(self, key):
-
         for x in self.cache:
             if x[0] == key:
                 return True
 
         return False
 
-
     def __getitem__(self, key):
-
         for i in range(len(self.cache)):
             x = self.cache[i]
             if x[0] == key:
@@ -33,9 +29,7 @@ class simplelrucache:
 
         raise KeyError
 
-
     def __setitem__(self, key, value):
-
         for i in range(len(self.cache)):
             x = self.cache[i]
             if x[0] == key:
@@ -49,9 +43,7 @@ class simplelrucache:
 
         self.cache.append([key, value])
 
-
     def __delitem__(self, key):
-
         for i in range(len(self.cache)):
             if self.cache[i][0] == key:
                 del self.cache[i]
@@ -67,7 +59,6 @@ class simplelrucache:
 
 
 def test(a, b, c, d, verify):
-
     for i in range(1000):
         x = random.randint(0, 512)
         y = random.randint(0, 512)
@@ -115,7 +106,6 @@ def testcache():
         assert list(zip(a.keys(), a.values())) == q2
         assert list(a.keys()) == list(a)
 
-
     a = lrucache(128)
     b = simplelrucache(128)
     verify(a, b)
@@ -138,7 +128,6 @@ def testcache():
 
 
 def wraptest():
-
     def verify(p, x):
         assert p == x.store
         for key, value in x.cache.items():
@@ -159,9 +148,7 @@ def wraptest():
     test(p, x, p, x, verify)
 
 
-
 def wraptest2():
-
     def verify(p, x):
         for key, value in x.store.items():
             if key not in x.dirty:
@@ -192,7 +179,6 @@ def wraptest2():
     assert p == q
 
 def wraptest3():
-
     def verify(p, x):
         for key, value in x.store.items():
             if key not in x.dirty:
@@ -224,9 +210,7 @@ def testDecorator():
 
 
 if __name__ == '__main__':
-
     random.seed()
-
 
     for i in range(20):
         testcache()

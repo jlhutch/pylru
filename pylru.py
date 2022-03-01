@@ -2,7 +2,7 @@
 # Cache implementaion with a Least Recently Used (LRU) replacement policy and
 # a basic dictionary interface.
 
-# Copyright (C) 2006-2019 Jay Hutchinson
+# Copyright (C) 2006-2022 Jay Hutchinson
 
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -46,7 +46,6 @@ class _dlnode(object):
 
 
 class lrucache(object):
-
     def __init__(self, size, callback=None):
         self.callback = callback
 
@@ -99,7 +98,6 @@ class lrucache(object):
         return node.value
 
     def get(self, key, default=None):
-        """Get an item - return default (None) if not present"""
         if key not in self.table:
             return default
         
@@ -317,11 +315,23 @@ class lrucache(object):
             yield node
             node = node.next
 
+    # The methods __getstate__() and __setstate__() are used to correctly
+    # support the copy and pickle modules from the standard library. In
+    # particular, the doubly linked list trips up the introspection machinery
+    # used by copy/pickle.
     def __getstate__(self):
+        # Copy the instance attributes.
         d = self.__dict__.copy()
+
+        # Remove those that we need to do by hand.
         del d['table']
         del d['head']
 
+        # Package up the key/value pairs from the doubly linked list into a
+        # normal list that can be copied/pickled correctly. We put the
+        # key/value pairs into the list in order, as returned by dli(), from
+        # most recently to least recently used, so that the copy can be
+        # restored with the same ordering.
         elements = [(node.key, node.value) for node in self.dli()]
         return (d, elements)
 
@@ -329,12 +339,19 @@ class lrucache(object):
         d = state[0]
         elements = state[1]
 
+        # Restore the instance attributes, except for the table and head.
         self.__dict__.update(d)
 
+        # Rebuild the table and doubly linked list from the simple list of
+        # key/value pairs in 'elements'.
 
+        # The listSize is the size of the original cache. We want this cache
+        # to have the same size, but we need to reset it temporarily to set up
+        # table and head correctly, so save a copy of the size.
         size = self.listSize
 
-        # Create an empty hash table.
+        # Setup a table and double linked list. This is identical to the way
+        # __init__() does it.
         self.table = {}
 
         self.head = _dlnode()
@@ -346,7 +363,10 @@ class lrucache(object):
         # Now adjust the list to the desired size.
         self.size(size)
 
-
+        # Fill the cache with the keys/values. Because inserted items are
+        # moved to the top of the doubly linked list, we insert the key/value
+        # pairs in reverse order. This ensures that the order of the doubly
+        # linked list is identical to the original cache.
         for key, value in reversed(elements):
             self[key] = value
 
@@ -390,7 +410,6 @@ class WriteThroughCacheManager(object):
         return value
 
     def get(self, key, default=None):
-        """Get an item - return default (None) if not present"""
         try:
             return self[key]
         except KeyError:
@@ -424,7 +443,6 @@ class WriteThroughCacheManager(object):
 
     def items(self):
         return self.store.items()
-
 
 
 class WriteBackCacheManager(object):
@@ -482,7 +500,6 @@ class WriteBackCacheManager(object):
         return value
 
     def get(self, key, default=None):
-        """Get an item - return default (None) if not present"""
         try:
             return self[key]
         except KeyError:
