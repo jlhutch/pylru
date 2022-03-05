@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name = "pylru",
-    version = "1.2.0",
+    version = "1.2.1",
     py_modules=['pylru'],
     description = "A least recently used (LRU) cache implementation",
     author = "Jay Hutchinson",
