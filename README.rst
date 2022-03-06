@@ -12,6 +12,13 @@ Pylru implements a true LRU cache along with several support classes. The cache 
 
 You can install pylru or you can just copy the source file pylru.py and use it directly in your own project. The rest of this file explains what the pylru module provides and how to use it. If you want to know more examine pylru.py. The code is straightforward and well commented.
 
+Installation
+============
+
+::
+
+    pip install pylru
+
 Usage
 =====
 
