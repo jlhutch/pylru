@@ -1,4 +1,3 @@
-
 # Cache implementaion with a Least Recently Used (LRU) replacement policy and
 # a basic dictionary interface.
 
@@ -19,7 +18,6 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 
-
 # The cache is implemented using a combination of a python dictionary (hash
 # table) and a circular doubly linked list. Items in the cache are stored in
 # nodes. These nodes make up the linked list. The list is used to efficiently
@@ -31,26 +29,38 @@
 # hash table under their associated key. The hash table allows efficient
 # lookup of values by key.
 
-import sys
-if sys.version_info < (3, 3):
-    from collections import Mapping
-else:
-    from collections.abc import Mapping
+from __future__ import annotations
 
-# Class for the node objects.
-class _dlnode(object):
-    __slots__ = ('empty', 'next', 'prev', 'key', 'value')
+import functools
+from collections.abc import Mapping, Iterator, Hashable
+from typing import Any, Callable, TypeVar, overload
 
-    def __init__(self):
+_KT = TypeVar("_KT", bound=Hashable)
+_VT = TypeVar("_VT")
+
+
+class _dlnode:
+    __slots__ = ("empty", "next", "prev", "key", "value")
+
+    next: _dlnode
+    prev: _dlnode
+    key: Any
+    value: Any
+
+    def __init__(self) -> None:
         self.empty = True
 
 
-class lrucache(object):
-    def __init__(self, size, callback=None):
+class lrucache:
+    def __init__(
+        self,
+        size: int,
+        callback: Callable[[Any, Any], Any] | None = None,
+    ) -> None:
         self.callback = callback
 
         # Create an empty hash table.
-        self.table = {}
+        self.table: dict[Any, _dlnode] = {}
 
         # Initialize the doubly linked list with one empty node. This is an
         # invariant. The cache size must always be greater than zero. Each
@@ -67,10 +77,10 @@ class lrucache(object):
         # Now adjust the list to the desired size.
         self.size(size)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.table)
 
-    def clear(self):
+    def clear(self) -> None:
         for node in self.dli():
             node.empty = True
             node.key = None
@@ -78,15 +88,15 @@ class lrucache(object):
 
         self.table.clear()
 
-    def __contains__(self, key):
+    def __contains__(self, key: object) -> bool:
         return key in self.table
 
-    # Looks up a value in the cache without affecting the cache's order.
-    def peek(self, key):
+    def peek(self, key: Any) -> Any:
+        """Looks up a value in the cache without affecting the cache's order."""
         node = self.table[key]
         return node.value
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Any) -> Any:
         node = self.table[key]
 
         # Update the list ordering. Move this node so that it directly
@@ -97,13 +107,13 @@ class lrucache(object):
 
         return node.value
 
-    def get(self, key, default=None):
+    def get(self, key: Any, default: Any = None) -> Any:
         if key not in self.table:
             return default
-        
+
         return self[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: Any, value: Any) -> None:
         # If any value is stored under 'key' in the cache already, then replace
         # that value with the new one.
         if key in self.table:
@@ -153,7 +163,7 @@ class lrucache(object):
         # need to adjust the 'head' variable.
         self.head = node
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: Any) -> None:
         # Lookup the node, remove it from the hash table, and mark it as empty.
         node = self.table[key]
         del self.table[key]
@@ -172,7 +182,7 @@ class lrucache(object):
         self.mtf(node)
         self.head = node.next
 
-    def update(self, *args, **kwargs):
+    def update(self, *args: Any, **kwargs: Any) -> None:
         if len(args) > 0:
             other = args[0]
             if isinstance(other, Mapping):
@@ -188,19 +198,20 @@ class lrucache(object):
         for key, value in kwargs.items():
             self[key] = value
 
-    __defaultObj = object()
-    def pop(self, key, default=__defaultObj):
+    _defaultObj: object = object()
+
+    def pop(self, key: Any, default: Any = _defaultObj) -> Any:
         if key in self.table:
             value = self.peek(key)
             del self[key]
             return value
 
-        if default is self.__defaultObj:
+        if default is self._defaultObj:
             raise KeyError
 
         return default
 
-    def popitem(self):
+    def popitem(self) -> tuple[Any, Any]:
         # Make sure the cache isn't empty.
         if len(self) < 1:
             raise KeyError
@@ -229,42 +240,48 @@ class lrucache(object):
 
         return key, value
 
-    def setdefault(self, key, default=None):
+    def setdefault(self, key: Any, default: Any = None) -> Any:
         if key in self.table:
             return self[key]
 
         self[key] = default
         return default
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Any]:
         # Return an iterator that returns the keys in the cache in order from
         # the most recently to least recently used. Does not modify the cache's
         # order.
         for node in self.dli():
             yield node.key
 
-    def items(self):
+    def items(self) -> Iterator[tuple[Any, Any]]:
         # Return an iterator that returns the (key, value) pairs in the cache
         # in order from the most recently to least recently used. Does not
         # modify the cache's order.
         for node in self.dli():
             yield (node.key, node.value)
 
-    def keys(self):
+    def keys(self) -> Iterator[Any]:
         # Return an iterator that returns the keys in the cache in order from
         # the most recently to least recently used. Does not modify the cache's
         # order.
         for node in self.dli():
             yield node.key
 
-    def values(self):
+    def values(self) -> Iterator[Any]:
         # Return an iterator that returns the values in the cache in order
         # from the most recently to least recently used. Does not modify the
         # cache's order.
         for node in self.dli():
             yield node.value
 
-    def size(self, size=None):
+    @overload
+    def size(self, size: int) -> int: ...
+
+    @overload
+    def size(self, size: None = None) -> int: ...
+
+    def size(self, size: int | None = None) -> int:
         if size is not None:
             assert size > 0
             if size > self.listSize:
@@ -274,9 +291,9 @@ class lrucache(object):
 
         return self.listSize
 
-    # Increases the size of the cache by inserting n empty nodes at the tail
-    # of the list.
-    def addTailNode(self, n):
+    def addTailNode(self, n: int) -> None:
+        """Increases the size of the cache by inserting n empty nodes at the
+        tail of the list."""
         for i in range(n):
             node = _dlnode()
             node.next = self.head
@@ -287,9 +304,9 @@ class lrucache(object):
 
         self.listSize += n
 
-    # Decreases the size of the cache by removing n nodes from the tail of the
-    # list.
-    def removeTailNode(self, n):
+    def removeTailNode(self, n: int) -> None:
+        """Decreases the size of the cache by removing n nodes from the tail
+        of the list."""
         assert self.listSize > n
         for i in range(n):
             node = self.head.prev
@@ -303,18 +320,16 @@ class lrucache(object):
             node.prev.next = self.head
 
             # The next four lines are not strictly necessary.
-            node.prev = None
-            node.next = None
+            node.prev = None  # type: ignore[assignment]
+            node.next = None  # type: ignore[assignment]
             node.key = None
             node.value = None
 
         self.listSize -= n
 
-    # This method adjusts the ordering of the doubly linked list so that
-    # 'node' directly precedes the 'head' node. Because of the order of
-    # operations, if 'node' already directly precedes the 'head' node, or if
-    # 'node' is the 'head' node, the order of the list will be unchanged.
-    def mtf(self, node):
+    def mtf(self, node: _dlnode) -> None:
+        """Adjusts the ordering of the doubly linked list so that 'node'
+        directly precedes the 'head' node."""
         node.prev.next = node.next
         node.next.prev = node.prev
 
@@ -324,36 +339,27 @@ class lrucache(object):
         node.next.prev = node
         node.prev.next = node
 
-    # This method returns an iterator that iterates over the non-empty nodes
-    # in the doubly linked list in order from the most recently to the least
-    # recently used.
-    def dli(self):
+    def dli(self) -> Iterator[_dlnode]:
+        """Iterates over non-empty nodes from most to least recently used."""
         node = self.head
         for i in range(len(self.table)):
             yield node
             node = node.next
 
-    # The methods __getstate__() and __setstate__() are used to correctly
-    # support the copy and pickle modules from the standard library. In
-    # particular, the doubly linked list trips up the introspection machinery
-    # used by copy/pickle.
-    def __getstate__(self):
+    def __getstate__(self) -> tuple[dict[str, Any], list[tuple[Any, Any]]]:
         # Copy the instance attributes.
         d = self.__dict__.copy()
 
         # Remove those that we need to do by hand.
-        del d['table']
-        del d['head']
+        del d["table"]
+        del d["head"]
 
         # Package up the key/value pairs from the doubly linked list into a
-        # normal list that can be copied/pickled correctly. We put the
-        # key/value pairs into the list in order, as returned by dli(), from
-        # most recently to least recently used, so that the copy can be
-        # restored with the same ordering.
+        # normal list that can be copied/pickled correctly.
         elements = [(node.key, node.value) for node in self.dli()]
         return (d, elements)
 
-    def __setstate__(self, state):
+    def __setstate__(self, state: tuple[dict[str, Any], list[tuple[Any, Any]]]) -> None:
         d = state[0]
         elements = state[1]
 
@@ -362,14 +368,8 @@ class lrucache(object):
 
         # Rebuild the table and doubly linked list from the simple list of
         # key/value pairs in 'elements'.
-
-        # The listSize is the size of the original cache. We want this cache
-        # to have the same size, but we need to reset it temporarily to set up
-        # table and head correctly, so save a copy of the size.
         size = self.listSize
 
-        # Setup a table and double linked list. This is identical to the way
-        # __init__() does it.
         self.table = {}
 
         self.head = _dlnode()
@@ -381,42 +381,36 @@ class lrucache(object):
         # Now adjust the list to the desired size.
         self.size(size)
 
-        # Fill the cache with the keys/values. Because inserted items are
-        # moved to the top of the doubly linked list, we insert the key/value
-        # pairs in reverse order. This ensures that the order of the doubly
-        # linked list is identical to the original cache.
+        # Fill the cache with the keys/values in reverse order so that
+        # the doubly linked list order matches the original cache.
         for key, value in reversed(elements):
             self[key] = value
 
 
-class WriteThroughCacheManager(object):
-    def __init__(self, store, size):
+class WriteThroughCacheManager:
+    def __init__(self, store: Any, size: int) -> None:
         self.store = store
         self.cache = lrucache(size)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.store)
 
-    # Returns/sets the size of the managed cache.
-    def size(self, size=None):
+    def size(self, size: int | None = None) -> int:
+        """Returns/sets the size of the managed cache."""
         return self.cache.size(size)
 
-    def clear(self):
+    def clear(self) -> None:
         self.cache.clear()
         self.store.clear()
 
-    def __contains__(self, key):
-        # Check the cache first. If it is there we can return quickly.
+    def __contains__(self, key: object) -> bool:
         if key in self.cache:
             return True
-
-        # Not in the cache. Might be in the underlying store.
         if key in self.store:
             return True
-
         return False
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: Any) -> Any:
         # Try the cache first. If successful we can just return the value.
         if key in self.cache:
             return self.cache[key]
@@ -427,108 +421,89 @@ class WriteThroughCacheManager(object):
         self.cache[key] = value
         return value
 
-    def get(self, key, default=None):
+    def get(self, key: Any, default: Any = None) -> Any:
         try:
             return self[key]
         except KeyError:
             return default
 
-    def __setitem__(self, key, value):
-        # Add the key/value pair to the cache and store.
+    def __setitem__(self, key: Any, value: Any) -> None:
         self.cache[key] = value
         self.store[key] = value
 
-    def __delitem__(self, key):
-        # With write-through behavior the cache and store should be consistent.
-        # Delete it from the store.
+    def __delitem__(self, key: Any) -> None:
         del self.store[key]
-
-        # It might also be in the cache, try to delete it. If it is not, we
-        # will catch KeyError and ignore it.
         try:
             del self.cache[key]
         except KeyError:
             pass
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Any]:
         return self.keys()
 
-    def keys(self):
-        return self.store.keys()
+    def keys(self) -> Iterator[Any]:
+        return iter(self.store.keys())
 
-    def values(self):
-        return self.store.values()
+    def values(self) -> Iterator[Any]:
+        return iter(self.store.values())
 
-    def items(self):
-        return self.store.items()
+    def items(self) -> Iterator[Any]:
+        return iter(self.store.items())
 
 
-class WriteBackCacheManager(object):
-    def __init__(self, store, size):
+class WriteBackCacheManager:
+    def __init__(self, store: Any, size: int) -> None:
         self.store = store
 
         # Create a set to hold the dirty keys.
-        self.dirty = set()
+        self.dirty: set[Any] = set()
 
-        # Define a callback function to be called by the cache when a
-        # key/value pair is about to be ejected. This callback will check to
-        # see if the key is in the dirty set. If so, then it will update the
-        # store object and remove the key from the dirty set.
-        def callback(key, value):
+        def callback(key: Any, value: Any) -> None:
             if key in self.dirty:
                 self.store[key] = value
                 self.dirty.remove(key)
 
-        # Create a cache and give it the callback function.
         self.cache = lrucache(size, callback)
 
-    # Returns/sets the size of the managed cache.
-    def size(self, size=None):
+    def size(self, size: int | None = None) -> int:
+        """Returns/sets the size of the managed cache."""
         return self.cache.size(size)
 
-    def len(self):
+    def len(self) -> int:
         self.sync()
         return len(self.store)
 
-    def clear(self):
+    def clear(self) -> None:
         self.cache.clear()
         self.dirty.clear()
         self.store.clear()
 
-    def __contains__(self, key):
-        # Check the cache first, since if it is there we can return quickly.
+    def __contains__(self, key: object) -> bool:
         if key in self.cache:
             return True
-
-        # Not in the cache. Might be in the underlying store.
         if key in self.store:
             return True
-
         return False
 
-    def __getitem__(self, key):
-        # Try the cache first. If successful we can just return the value.
+    def __getitem__(self, key: Any) -> Any:
         if key in self.cache:
             return self.cache[key]
 
-        # It wasn't in the cache. Look it up in the store, add the entry to
-        # the cache, and return the value.
         value = self.store[key]
         self.cache[key] = value
         return value
 
-    def get(self, key, default=None):
+    def get(self, key: Any, default: Any = None) -> Any:
         try:
             return self[key]
         except KeyError:
             return default
 
-    def __setitem__(self, key, value):
-        # Add the key/value pair to the cache.
+    def __setitem__(self, key: Any, value: Any) -> None:
         self.cache[key] = value
         self.dirty.add(key)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: Any) -> None:
         found = False
         try:
             del self.cache[key]
@@ -543,13 +518,13 @@ class WriteBackCacheManager(object):
         except KeyError:
             pass
 
-        if not found:  # If not found in cache or store, raise error.
+        if not found:
             raise KeyError
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Any]:
         return self.keys()
 
-    def keys(self):
+    def keys(self) -> Iterator[Any]:
         for key in self.store.keys():
             if key not in self.dirty:
                 yield key
@@ -557,11 +532,11 @@ class WriteBackCacheManager(object):
         for key in self.dirty:
             yield key
 
-    def values(self):
+    def values(self) -> Iterator[Any]:
         for key, value in self.items():
             yield value
 
-    def items(self):
+    def items(self) -> Iterator[tuple[Any, Any]]:
         for key, value in self.store.items():
             if key not in self.dirty:
                 yield (key, value)
@@ -570,38 +545,44 @@ class WriteBackCacheManager(object):
             value = self.cache.peek(key)
             yield (key, value)
 
-    def sync(self):
-        # For each dirty key, peek at its value in the cache and update the
-        # store. Doesn't change the cache's order.
+    def sync(self) -> None:
         for key in self.dirty:
             self.store[key] = self.cache.peek(key)
-        # There are no dirty keys now.
         self.dirty.clear()
 
-    def flush(self):
+    def flush(self) -> None:
         self.sync()
         self.cache.clear()
 
-    def __enter__(self):
+    def __enter__(self) -> WriteBackCacheManager:
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: Any,
+    ) -> None:
         self.sync()
-        return False
 
 
-class FunctionCacheManager(object):
-    def __init__(self, func, size, callback=None):
+class FunctionCacheManager:
+    def __init__(
+        self,
+        func: Callable[..., Any],
+        size: int,
+        callback: Callable[[Any, Any], Any] | None = None,
+    ) -> None:
         self.func = func
         self.cache = lrucache(size, callback)
 
-    def size(self, size=None):
+    def size(self, size: int | None = None) -> int:
         return self.cache.size(size)
 
-    def clear(self):
+    def clear(self) -> None:
         self.cache.clear()
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
         kwtuple = tuple((key, kwargs[key]) for key in sorted(kwargs.keys()))
         key = (args, kwtuple)
         try:
@@ -614,20 +595,25 @@ class FunctionCacheManager(object):
         return value
 
 
-def lruwrap(store, size, writeback=False):
+def lruwrap(
+    store: Any, size: int, writeback: bool = False
+) -> WriteThroughCacheManager | WriteBackCacheManager:
     if writeback:
         return WriteBackCacheManager(store, size)
     else:
         return WriteThroughCacheManager(store, size)
 
-import functools
 
-class lrudecorator(object):
-    def __init__(self, size, callback=None):
+class lrudecorator:
+    def __init__(
+        self,
+        size: int,
+        callback: Callable[[Any, Any], Any] | None = None,
+    ) -> None:
         self.cache = lrucache(size, callback)
 
-    def __call__(self, func):
-        def wrapper(*args, **kwargs):
+    def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             kwtuple = tuple((key, kwargs[key]) for key in sorted(kwargs.keys()))
             key = (args, kwtuple)
             try:
@@ -639,7 +625,7 @@ class lrudecorator(object):
             self.cache[key] = value
             return value
 
-        wrapper.cache = self.cache
-        wrapper.size = self.cache.size
-        wrapper.clear = self.cache.clear
+        wrapper.cache = self.cache  # type: ignore[attr-defined]
+        wrapper.size = self.cache.size  # type: ignore[attr-defined]
+        wrapper.clear = self.cache.clear  # type: ignore[attr-defined]
         return functools.update_wrapper(wrapper, func)
