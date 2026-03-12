@@ -16,21 +16,17 @@
 # hash table under their associated key. The hash table allows efficient
 # lookup of values by key.
 
-import sys
-if sys.version_info < (3, 3):
-    from collections import Mapping
-else:
-    from collections.abc import Mapping
+from collections.abc import Mapping
 
 # Class for the node objects.
-class _dlnode(object):
+class _dlnode:
     __slots__ = ('empty', 'next', 'prev', 'key', 'value')
 
     def __init__(self):
         self.empty = True
 
 
-class lrucache(object):
+class lrucache:
     def __init__(self, size, callback=None):
         self.callback = callback
 
@@ -373,7 +369,7 @@ class lrucache(object):
             self[key] = value
 
 
-class WriteThroughCacheManager(object):
+class WriteThroughCacheManager:
     def __init__(self, store, size):
         self.store = store
         self.cache = lrucache(size)
@@ -447,7 +443,7 @@ class WriteThroughCacheManager(object):
         return self.store.items()
 
 
-class WriteBackCacheManager(object):
+class WriteBackCacheManager:
     def __init__(self, store, size):
         self.store = store
 
@@ -574,7 +570,7 @@ class WriteBackCacheManager(object):
         return False
 
 
-class FunctionCacheManager(object):
+class FunctionCacheManager:
     def __init__(self, func, size, callback=None):
         self.func = func
         self.cache = lrucache(size, callback)
@@ -604,9 +600,10 @@ def lruwrap(store, size, writeback=False):
     else:
         return WriteThroughCacheManager(store, size)
 
+
 import functools
 
-class lrudecorator(object):
+class lrudecorator:
     # Ben doesn't like the MIT License, but he agreed to it anyway. Thanks Ben!
     def __init__(self, size, callback=None):
         self.cache = lrucache(size, callback)
