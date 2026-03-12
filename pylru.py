@@ -34,7 +34,6 @@ class lrucache(object):
     def __init__(self, size, callback=None):
         self.callback = callback
 
-        # Create an empty hash table.
         self.table = {}
 
         # Initialize the doubly linked list with one empty node. This is an
@@ -49,7 +48,8 @@ class lrucache(object):
 
         self.listSize = 1
 
-        # Now adjust the list to the desired size.
+        # Now that the invariant mentioned above is met, we can call size()
+        # to adjust the list to the desired size.
         self.size(size)
 
     def __len__(self):
@@ -103,12 +103,12 @@ class lrucache(object):
 
             return
 
-        # Ok, no value is currently stored under 'key' in the cache. We need
+        # No value is currently stored under 'key' in the cache. We need
         # to choose a node to place the new item in. There are two cases. If
-        # the cache is full some item will have to be pushed out of the
+        # the cache is full, some item will have to be pushed out of the
         # cache. We want to choose the node with the least recently used
         # item. This is the node at the tail of the list. If the cache is not
-        # full we want to choose a node that is empty. Because of the way the
+        # full, we want to choose a node that is empty. Because of the way the
         # list is managed, the empty nodes are always together at the tail
         # end of the list. Thus, in either case, by chooseing the node at the
         # tail of the list our conditions are satisfied.
@@ -190,7 +190,6 @@ class lrucache(object):
         if len(self) < 1:
             raise KeyError
 
-        # Grab the head node
         node = self.head
 
         # Save the key and value so that we can return them.
