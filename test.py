@@ -8,7 +8,6 @@ import random
 # results against another, simpler, LRU cache implementation.
 
 class simplelrucache:
-
     def __init__(self, size):
         # Initialize the cache as empty.
         self.cache = []
@@ -220,5 +219,3 @@ if __name__ == '__main__':
         wraptest2()
         wraptest3()
         testDecorator()
-
-
