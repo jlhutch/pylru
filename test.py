@@ -1,3 +1,5 @@
+# Copyright (c) 2006-2026 Jay Hutchinson
+# SPDX-License-Identifier: MIT
 
 from pylru import *
 import random

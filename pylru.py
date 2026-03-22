@@ -2,23 +2,8 @@
 # Cache implementaion with a Least Recently Used (LRU) replacement policy and
 # a basic dictionary interface.
 
-# Copyright (C) 2006-2022 Jay Hutchinson
-
-# This program is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License as published by the Free
-# Software Foundation; either version 2 of the License, or (at your option)
-# any later version.
-
-# This program is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-# more details.
-
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc., 51
-# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-
-
+# Copyright (c) 2006-2026 Jay Hutchinson
+# SPDX-License-Identifier: MIT
 
 # The cache is implemented using a combination of a python dictionary (hash
 # table) and a circular doubly linked list. Items in the cache are stored in
@@ -623,6 +608,7 @@ def lruwrap(store, size, writeback=False):
 import functools
 
 class lrudecorator(object):
+    # Ben doesn't like the MIT License, but he agreed to it anyway. Thanks Ben!
     def __init__(self, size, callback=None):
         self.cache = lrucache(size, callback)
 
