@@ -18,6 +18,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "Topic :: Software Development :: Libraries :: Python Modules",
         ],
-    long_description=open('README.rst').read())
-
-
+    long_description=open('README.rst').read(),
+    long_description_content_type='text/x-rst')
