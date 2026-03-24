@@ -8,7 +8,7 @@ version = "1.2.2"
 authors = [{name = "Jay Hutchinson", email = "jlhutch+pylru@gmail.com"},]
 
 description = "A least recently used (LRU) cache implementation"
-readme = "README.rst"
+readme = "README.md"
 requires-python = ">=3.3"
 license = "MIT"
 license-files = ["LICENSE.txt"]
