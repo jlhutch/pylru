@@ -1,5 +1,5 @@
 
-# Cache implementaion with a Least Recently Used (LRU) replacement policy and
+# Cache implementation with a Least Recently Used (LRU) replacement policy and
 # a basic dictionary interface.
 
 # Copyright (c) 2006-2026 Jay Hutchinson
@@ -71,7 +71,7 @@ class lrucache:
         node = self.table[key]
 
         # Update the list ordering. Move this node so that it directly
-        # proceeds the head node. Then set the 'head' variable to it. This
+        # precedes the head node. Then set the 'head' variable to it. This
         # makes it the new head of the list.
         self.mtf(node)
         self.head = node
@@ -106,10 +106,10 @@ class lrucache:
         # item. This is the node at the tail of the list. If the cache is not
         # full, we want to choose a node that is empty. Because of the way the
         # list is managed, the empty nodes are always together at the tail
-        # end of the list. Thus, in either case, by chooseing the node at the
+        # end of the list. Thus, in either case, by choosing the node at the
         # tail of the list our conditions are satisfied.
 
-        # Since the list is circular, the tail node directly preceeds the
+        # Since the list is circular, the tail node directly precedes the
         # 'head' node.
         node = self.head.prev
 
@@ -129,7 +129,7 @@ class lrucache:
         self.table[key] = node
 
         # We need to move the node to the head of the list. The node is the
-        # tail node, so it directly preceeds the head node due to the list
+        # tail node, so it directly precedes the head node due to the list
         # being circular. Therefore, the ordering is already correct, we just
         # need to adjust the 'head' variable.
         self.head = node
