@@ -21,8 +21,9 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
-[project-urls]
+[project.urls]
 Homepage = "https://github.com/jlhutch/pylru"
+Repository = "https://github.com/jlhutch/pylru.git"
 
 [tool.setuptools]
 py-modules = ["pylru"]
