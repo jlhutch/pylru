@@ -468,7 +468,7 @@ class WriteBackCacheManager:
     def size(self, size=None):
         return self.cache.size(size)
 
-    def len(self):
+    def __len__(self):
         self.sync()
         return len(self.store)
 
