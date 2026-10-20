@@ -246,7 +246,9 @@ class lrucache:
 
     def size(self, size=None):
         if size is not None:
-            assert size > 0
+            if size <= 0:
+                raise ValueError("Cache size must be greater than 0.")
+
             if size > self.listSize:
                 self.addTailNode(size - self.listSize)
             elif size < self.listSize:
