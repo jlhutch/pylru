@@ -116,7 +116,7 @@ value = cached[key] # Lookup a value given its key.
 cached[key] = value # Insert a key/value pair.
 del cached[key]     # Delete a value given its key.
 
-key in cache        # Test for membership. Does not affect the cache order.
+key in cached       # Test for membership. Does not affect the cache order.
 
 cached.keys()       # Returns store.keys()
 cached.values()     # Returns store.values()
@@ -127,6 +127,7 @@ cached.items()      # Returns store.items()
                     # in the order dictated by store.
 
 for key in cached:  # Same as store.keys()
+    pass
 
 cached.size()       # Returns the size of the cache
 cached.size(x)      # Changes the size of the cache. x MUST be greater than
@@ -154,7 +155,7 @@ value = cached[key] # Lookup a value given its key.
 cached[key] = value # Insert a key/value pair.
 del cached[key]     # Delete a value given its key.
 
-key in cache        # Test for membership. Does not affect the cache order.
+key in cached       # Test for membership. Does not affect the cache order.
 
 
 cached.keys()       # Return an iterator over the keys in the cache/store
@@ -172,14 +173,15 @@ cached.items()      # Return an iterator over the (key, value) pairs in the
                     # The iterators iterate over their respective elements
                     # in arbitrary order.
                     #
-                    # WARNING - While these iterators do not effect the
+                    # WARNING - While these iterators do not affect the
                     # cache order the lookup, insert, and delete operations
-                    # do. The results of changing the cache's order
+                    # do. The result of changing the cache's order
                     # during iteration is undefined. If you really need to
                     # do something of the sort use list(cached.keys()),
                     # then loop over the list elements.
 
 for key in cached:  # Same as cached.keys()
+    pass
 
 cached.size()       # Returns the size of the cache
 cached.size(x)      # Changes the size of the cache. x MUST be greater than
