@@ -419,9 +419,9 @@ class WriteThroughCacheManager:
             return default
 
     def __setitem__(self, key, value):
-        # Add the key/value pair to the cache and store.
-        self.cache[key] = value
+        # Add the key/value pair to the store and cache.
         self.store[key] = value
+        self.cache[key] = value
 
     def __delitem__(self, key):
         # With write-through behavior the cache and store should be consistent.
