@@ -286,6 +286,7 @@ class lrucache:
             # Splice the tail node out of the list
             self.head.prev = node.prev
             node.prev.next = self.head
+            self.listSize -= 1
 
             # The next four lines are not strictly necessary.
             node.prev = None
@@ -293,7 +294,6 @@ class lrucache:
             node.key = None
             node.value = None
 
-        self.listSize -= n
 
     # This method adjusts the ordering of the doubly linked list so that
     # 'node' directly precedes the 'head' node. Because of the order of
