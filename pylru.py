@@ -156,7 +156,10 @@ class lrucache:
     def update(self, *args, **kwargs):
         if len(args) > 0:
             other = args[0]
-            if isinstance(other, Mapping):
+            if isinstance(other, lrucache):
+                for key, value in reversed(list(other.items())):
+                    self[key] = value
+            elif isinstance(other, Mapping):
                 for key in other:
                     self[key] = other[key]
             elif hasattr(other, "keys"):
