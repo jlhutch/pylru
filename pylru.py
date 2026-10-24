@@ -436,7 +436,7 @@ class WriteThroughCacheManager:
             pass
 
     def __iter__(self):
-        return self.keys()
+        return iter(self.keys())
 
     def keys(self):
         return self.store.keys()
