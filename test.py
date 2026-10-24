@@ -210,8 +210,37 @@ def testDecorator():
         assert square(x) == x*x
 
 
+def testWriteThroughIteration():
+    from collections import OrderedDict
+
+    class ListKeyStore(dict):
+        def keys(self):
+            return list(super().keys())
+
+    for store_type in (dict, OrderedDict, ListKeyStore):
+        for entries in ([], [('a', 1), ('b', 2), ('c', 3)]):
+            store = store_type(entries)
+            cached = WriteThroughCacheManager(store, 2)
+            if entries:
+                cached['a']
+            before = list(cached.cache.items())
+            iterator = iter(cached)
+            assert iter(iterator) is iterator
+            assert list(iterator) == list(store.keys())
+            assert list(cached) == list(store.keys())
+            assert list(cached.cache.items()) == before
+            assert dict(cached) == store
+            try:
+                next(iterator)
+            except StopIteration:
+                pass
+            else:
+                raise AssertionError('exhausted iterator yielded a key')
+
+
 if __name__ == '__main__':
     random.seed()
+    testWriteThroughIteration()
 
     for i in range(20):
         testcache()
